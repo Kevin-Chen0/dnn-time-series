@@ -5,37 +5,46 @@ from typing import Tuple
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import SimpleRNN, Dense, Dropout
 # helper functions
-from ..utils import print_dynamic_rmse, print_mae, print_mape
+from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 
-def build_rnn_model(X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray,
-                    y_test: np.ndarray, n_input: int, n_output: int = 1,
-                    n_features: int = 1, n_units: int = 64, d_rate: int = 0.15, 
-                    n_epoch: int = 10, n_batch: int = 1, verbose: int = 0
-                    ) -> Tuple[Sequential, np.ndarray, float, float]:
+class RNNWrapper:
 
-    rnn_model = StackedRNN(n_input, n_output, n_units, n_features, d_rate)
-    rnn_model.compile(optimizer="adam", loss="mse")
-    start_time = time.time()
-    rnn_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch, verbose=verbose)
-    end_time = time.time()
+    def __init__(self, n_input: int, n_output: int = 1, n_features: int = 1, 
+                 n_units: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
+                 loss: str = "mse"):
+        
+        self.rnn_model = StackedRNN(n_input, n_output, n_units, n_features, d_rate)
+        self.rnn_model.compile(optimizer, loss)
+        self.run_time = 0.0
 
-    rnn_pred = rnn_model.predict(X_test, verbose=verbose)
+    def fit(self, X_train: np.ndarray, y_train: np.ndarray, n_epoch: int = 10,
+            n_batch: int = 1, verbose: int = 0) -> None:
 
-    rmse, norm_rmse = print_dynamic_rmse(y_test, rnn_pred, y_train)
-    mae = print_mae(y_test, rnn_pred)
-    mape = print_mape(y_test, rnn_pred)
-    run_time = end_time - start_time
-    print("\n-----------------------------------------------------------------")
-    print("RNN SUMMARY:")
-    print("-----------------------------------------------------------------")
-    print(f"MAE Score: {round(mae, 4)}")
-    print(f"MAPE Score: {round(mape, 4)}")
-    print(f"RMSE Score: {round(rmse, 4)}")
-    print(f"Normalized RMSE Score: {round(norm_rmse, 4)*100}%")
-    print(f"Total Training Time: {round(run_time/60, 2)} min")
+        start_time = time.time()
+        self.rnn_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch,
+                           verbose=verbose)
+        end_time = time.time()
+        self.run_time = end_time - start_time
 
-    return rnn_model, rnn_pred, rmse, norm_rmse
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
+                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+
+        rnn_pred = self.rnn_model.predict(X_test, verbose=verbose)
+
+        rmse = calc_rmse(y_test, rnn_pred)
+        mae = calc_mae(y_test, rnn_pred)
+        mape = calc_mape(y_test, rnn_pred)
+
+        print("\n-----------------------------------------------------------------")
+        print("RNN SUMMARY:")
+        print("-----------------------------------------------------------------")
+        print(f"MAE Score: {round(mae, 4)}")
+        print(f"MAPE Score: {round(mape, 4)}")
+        print(f"RMSE Score: {round(rmse, 4)}")
+        print(f"Total Training Time: {round(self.run_time/60, 2)} min")
+    
+        return self.rnn_model, rnn_pred, rmse
 
 
 def VanillaRNN(n_input: int, n_output: int, n_units: int, n_features: int) -> Sequential:

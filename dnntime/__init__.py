@@ -9,7 +9,7 @@
 # Version
 from .__version__ import __version__
 # Endpoint functions for users
-from .package import run_package as run
+from .run import run_package as run
 from .utils.etl import load_data as load, clean_data as clean
 
 

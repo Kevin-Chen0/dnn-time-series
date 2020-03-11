@@ -6,56 +6,79 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import ConvLSTM2D, LSTM, Dense, Flatten, Dropout, \
                                     RepeatVector, TimeDistributed
 # helper functions
-from ..utils import print_dynamic_rmse, print_mae, print_mape
+from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 
-def build_convlstm_model(X_train: np.ndarray, y_train: np.ndarray, 
-                         X_test: np.ndarray, y_test: np.ndarray,
-                         n_input: int, n_output: int = 1, l_subseq: int = 1,
-                         n_row: int = 1, n_col: int = 1, n_features: int = 1,
-                         n_units: int = 64, d_rate: int = 0.15, n_epoch: int = 10,
-                         n_batch: int = 1, verbose: int = 0
-                         ) -> Tuple[Sequential, np.ndarray, float, float]:
+class ConvLSTMWrapper:
 
-    # ConvLSTM Hyperparameters
-    # [samples, subseq, rows, cols, channel]
+    def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1, 
+                 n_col: int = 1, n_features: int = 1, n_units: int = 64,
+                 d_rate: int = 0.15, optimizer: str = 'adam', loss: str = "mse"):
+        
+        self.conv_model = StackedConvLSTM(n_steps, n_row, n_col, n_units,
+                                          n_features, d_rate)
+        self.conv_model.compile(optimizer, loss)
+        self.l_subseq = l_subseq
+        self.n_row = n_row
+        self.n_col = n_col
+        self.n_features = n_features
+        self.run_time = 0.0
 
-    X_train = X_train.reshape((X_train.shape[0], int(X_train.shape[1]/l_subseq),
-                               n_row, n_col, n_features))
-    y_train = y_train.reshape((y_train.shape[0], n_col, n_features))
-    X_test = X_test.reshape((X_test.shape[0], int(X_test.shape[1]/l_subseq),
-                             n_row, n_col, n_features))
-    y_test = y_test.reshape((y_test.shape[0], n_col, n_features))
-    n_steps = X_train.shape[1]
+    def reshape(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        ConvLSTM Hyperparameters
+        Source: https://machinelearningmastery.com/how-to-develop-lstm-models-for-multi-step-time-series-forecasting-of-household-power-consumption/
 
-    conv_model = StackedConvLSTM(n_steps, n_row, n_col, n_units, n_features, d_rate)
-    conv_model.compile(optimizer="adam", loss="mse")
-    start_time = time.time()
-    conv_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch, verbose=verbose)
-    end_time = time.time()
+        Parameters
+        ----------
+        X : [samples, n_input, n_features]
+        y : [samples, n_output]
 
-    conv_pred = conv_model.predict(X_test, verbose=verbose)
-    rmse, norm_rmse = print_dynamic_rmse(y_test, conv_pred, y_train)
-    mae = print_mae(y_test, conv_pred)
-    mape = print_mape(y_test, conv_pred)
-    run_time = end_time - start_time
-    print("\n-----------------------------------------------------------------")
-    print("ConvLSTM SUMMARY:")
-    print("-----------------------------------------------------------------")
-    print("X: [#samples, #subseq, #rows, #cols (outputs), #channel (features)]")
-    print("y: [#samples, #cols (outputs), #channel (features)]")
-    print('    Conv X_train.shape = ', X_train.shape)
-    print('    Conv y_train.shape = ', y_train.shape)
-    print('    Conv X_test.shape = ',  X_test.shape)
-    print('    Conv y_test.shape = ', y_test.shape)
-    print("-----------------------------------------------------------------")
-    print(f"MAE Score: {round(mae, 4)}")
-    print(f"MAPE Score: {round(mape, 4)}")
-    print(f"RMSE Score: {round(rmse, 4)}")
-    print(f"Normalized RMSE Score: {round(norm_rmse, 4)*100}%")
-    print(f"Total Training Time: {round(run_time/60, 2)} min")
+        Returns
+        -------
+        X : [samples, n_input/length_subsequence, n_row, n_col, n_features] or
+            [samples, subseq, rows, cols, channel]
+        y : [samples, n_output, features]
+            [samples, target, channel]
 
-    return conv_model, conv_pred, rmse, norm_rmse
+        """
+        X = X.reshape((X.shape[0], int(X.shape[1]/self.l_subseq),
+                       self.n_row, self.n_col, self.n_features
+                       ))
+        y = y.reshape((y.shape[0], self.n_col, self.n_features))
+
+        return X, y
+
+    def fit(self, X_train: np.ndarray, y_train: np.ndarray, n_epoch: int = 10,
+            n_batch: int = 1, verbose: int = 0) -> None:
+
+        X_train, y_train = self.reshape(X_train, y_train)
+
+        start_time = time.time()
+        self.conv_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch,
+                           verbose=verbose)
+        end_time = time.time()
+        self.run_time = end_time - start_time
+
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
+                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+
+        X_test, y_test = self.reshape(X_test, y_test)
+        conv_pred = self.conv_model.predict(X_test, verbose=verbose)
+
+        rmse = calc_rmse(y_test, conv_pred)
+        mae = calc_mae(y_test, conv_pred)
+        mape = calc_mape(y_test, conv_pred)
+
+        print("\n-----------------------------------------------------------------")
+        print("ConvLSTM SUMMARY:")
+        print("-----------------------------------------------------------------")
+        print(f"MAE Score: {round(mae, 4)}")
+        print(f"MAPE Score: {round(mape, 4)}")
+        print(f"RMSE Score: {round(rmse, 4)}")
+        print(f"Total Training Time: {round(self.run_time/60, 2)} min")
+    
+        return self.conv_model, conv_pred, rmse
 
 
 def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_units: int, 

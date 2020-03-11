@@ -17,10 +17,10 @@ import tensorflow as tf
 
 # Models
 from .models import (
-    build_rnn_model,
-    build_lstm_model,
-    build_gru_model,
-    build_convlstm_model,
+    RNNWrapper,
+    LSTMWrapper,
+    GRUWrapper,
+    ConvLSTMWrapper,
 )
 # Tests
 from .tests import validate_config
@@ -48,8 +48,10 @@ class CheckpointDict:
         self.dict[new_key] = obj
         if isinstance(obj, pd.DataFrame):
             print(f"\n--> {name} {self.type} saved in {self.type}" + \
-                  f"_dict[{new_key}], see head below:")
+                  f"_dict[{new_key}]. See head below:")
             display(HTML(obj.head().to_html()))
+            print("\n    See tail below:")
+            display(HTML(obj.tail().to_html()))
             print()
         else:
             print(f"\n--> {name} {self.type} saved in {self.type}" + \
@@ -153,7 +155,6 @@ def run_package(
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 2) {space}Preprocessing I (Cleaning)", ui)
-    # display(HTML("<b>STEP 2) &nbspPreprocessing I (Cleaning)</b>"))
     print("-------------------------------------------------------------------\n")
 
     # Initializing immutable config variables for STEP 2) and beyond
@@ -186,7 +187,6 @@ def run_package(
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 3) {space}EDA I (General)", ui)
-    # display(HTML("<b>STEP 3) &nbspEDA I (General)</b>"))
     print("-------------------------------------------------------------------\n")
 
     # Initializing immutable config variables for STEP 3) and beyond
@@ -200,15 +200,16 @@ def run_package(
     pd.plotting.register_matplotlib_converters()
 
     # Define data with the defined plot labels in the config file
+    print("Plot the entire time-series data:\n")
     ts_plot(df, dt_col, target,
             title=title,
+            x_label=x_label,
             y_label=y_label
             )
 
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 4) {space}EDA II (Time-Series Stats)", ui)
-    # display(HTML("<b>STEP 4) &nbspEDA II (Time-Series Stats)</b>"))
     print("-------------------------------------------------------------------\n")
 
     # Initializing immutable config variables for STEP 4) and beyond
@@ -216,7 +217,6 @@ def run_package(
 
     print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).", 
                ui, n_after=1)
-    # display(HTML("<b>4.1) &nbspTesting stationarity using Augmented Dickey-Fuller (ADF).</b><br><br>"))
     stationarity = adf_stationary_test(df, 1-ci)
     if stationarity:
         print(f"Current data is stationary with {ci*100}% " + \
@@ -226,33 +226,30 @@ def run_package(
               "confidence interval.\n")
 
     print_bold(f"4.2) {space}Printing out ETS decomposition plot.", ui, n_before=1, n_after=1)
-    # display(HTML("<br><b>4.2) &nbspPrinting out ETS decomposition plot.\n</b><br><br>"))
     # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label);
     # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label,
     #                        prophet=True);
-    ets = ets_decomposition_plot(df, dt_col, target, title, y_label,
+    ets = ets_decomposition_plot(df, dt_col, target,
+                                 title=title,
+                                 x_label=x_label,
+                                 y_label=y_label,
                                  plotly=True);
 
     print_bold(f"4.3) {space}Plot out ACF/PACF graph..", ui, n_before=1, n_after=1)
-    # display(HTML("<br><b>\n4.3) &nbspPlot out ACF/PACF graph..\n</b><br><br>"))
-    # print(f"{start_bold}\n4.3) Plot out ACF/PACF graph..\n{end_bold}")
     title = "Total Electricity Demand"
     lags_7 = 24*7  # 7-days lag
     lags_30 = 24*30  # 30-days lag
     lags_90 = 24*90  # 90-days lag
     acf_pacf_plot(df, target, title, lags=[lags_7, lags_30])
 
-    print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
-               n_before=1, n_after=1)
-    # display(HTML("<br><b>4.4) Expotential Smoothing Holt-Winters.</b><br><br>"))
+    # print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
+    #            n_before=1, n_after=1)
 
-    print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
-    # display(HTML("<br><b>4.5) ARIMA.</b>"))
+    # print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
 
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 5) {space}Preprocessing II (Transformations)", ui)
-    # display(HTML("<b>STEP 5) &nbspPreprocessing II (Transformations)</b>"))
     print("-------------------------------------------------------------------\n")
 
     # Initializing immutable config variables for STEP 5) and beyond
@@ -282,7 +279,6 @@ def run_package(
             df, decom_type = decompose(df, target, decom_type=step, decom_model=decom_model)
 
         print_bold(f"{info}", ui)
-        # display(HTML(f"<b>{info}</b>"))
         data_dict.save(df, step.title()+standardize_note) 
         substep += 1
         print()
@@ -293,9 +289,7 @@ def run_package(
     ##################################################################################################
     print("\n-------------------------------------------------------------------")
     print_bold(f"STEP 6) {space}Preprocessing III (Make Supervised)", ui)
-    # display(HTML("<b>STEP 6) &nbspPreprocessing III (Make Supervised)</b>"))
     print("-------------------------------------------------------------------\n")
-
 
     # Initializing immutable config variables for STEP 6) and beyond
     supervise = config['supervise']
@@ -305,7 +299,7 @@ def run_package(
     test_set = supervise['test_set']
     max_gap = supervise['max_gap']
 
-    ################ This is where you test the data and find the time interval #######
+    # Converting all 'str' periods into #timesteps based of the stated 'freq'
     n_input = interval_to_timesteps(train_period, freq)  # num input timesteps
     n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
     n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
@@ -335,12 +329,13 @@ def run_package(
     print(f"    Validation dataset: {X_val.shape[0]} observations, or '{val_set}'.")
     print(f"    Testing dataset: {X_test.shape[0]} observations, or '{test_set}'.")
 
-    train_prct = round(len(X_train)/len(X)*100, 2)
-    val_prct = round(len(X_val)/len(X)*100, 2)
-    test_prct = round(len(X_test)/len(X)*100, 2)
-    gap_prct = round(100-train_prct-val_prct-test_prct, 2)
+    train_prct = len(X_train)/len(X)*100
+    val_prct = len(X_val)/len(X)*100
+    test_prct = len(X_test)/len(X)*100
+    gap_prct = 100 - train_prct - val_prct - test_prct
     print("\nSplit %:")
-    print(f"Train: {train_prct}%, Val: {val_prct}%, Test: {test_prct}%, Gap: {gap_prct}%")
+    print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: " + \
+          f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
 
     print("\nDataset shapes:")
     print(f"    Original:")
@@ -379,7 +374,6 @@ def run_package(
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 7) {space}Model Search (NNs)", ui)
-    # display(HTML("<b>STEP 7) &nbspModel Search (NNs)</b>"))
     print("-------------------------------------------------------------------\n")
 
     if len(tf.config.list_physical_devices('GPU')) > 0:
@@ -395,6 +389,8 @@ def run_package(
     n_features = 1 if univariate else dnn['n_features']  # number of features
     n_units = dnn['n_units']  # number of units per layer
     d_rate = dnn['d_rate']  # dropout rate
+    opt = dnn['optimizer']
+    loss = dnn['objective_function']
     verbose = dnn['verbose']
 
     evaluate = config['evaluate']
@@ -403,93 +399,79 @@ def run_package(
     # Store all of the data ETL checkpoints in a dict that will be returned
     model_dict = CheckpointDict('model')
 
-    # Begin the DNN model running process ####################################
+    # Begin the DL model running process #####################################
     if model_type.lower() in ['rnn', 'all']:
         name = 'RNN'
         print_bold(f"7.1) {space}Running a RNN Model...", ui, n_before=1, n_after=1)
-        # display(HTML("<br><b>7.1) &nbspRunning a RNN Model...</b><br><br>"))
-        model, pred, rmse, norm_rmse = build_rnn_model(
-                                    X_train, y_train, X_val, y_val, n_input,
-                                    n_output, n_features, n_units, d_rate,
-                                    n_epoch, n_batch, verbose
-                                    )
-        score_val = rmse if score_type == 'rmse' else norm_rmse
+        rnn = RNNWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+        rnn.fit(X_train, y_train, n_epoch, n_batch, verbose)
+        model, pred, score = rnn.evaluate(X_test, y_test, score_type)
         model_store = {
             'model': model,
             'forecast': pred,
-            f'{score_type}': score_val
+            f'{score_type}': score
             }
         model_dict.save(model_store, name)
 
     if model_type.lower() in ['lstm', 'all']:
         name = 'LSTM'
         print_bold(f"7.2) {space}Running a LSTM Model...", ui, n_before=1, n_after=1)
-        # display(HTML("<br><b>7.2) &nbspRunning a LSTM Model...</b><br><br>"))
-        model, pred, rmse, norm_rmse = build_lstm_model(
-                                    X_train, y_train, X_val, y_val, n_input,
-                                    n_output, n_features, n_units, d_rate,
-                                    n_epoch, n_batch, verbose
-                                    )
-        score_val = rmse if score_type == 'rmse' else norm_rmse
+        lstm = LSTMWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+        lstm.fit(X_train, y_train, n_epoch, n_batch, verbose)
+        model, pred, score = lstm.evaluate(X_test, y_test, score_type)
         model_store = {
             'model': model,
             'forecast': pred,
-            f'{score_type}': score_val
+            f'{score_type}': score
             }
         model_dict.save(model_store, name)
 
     if model_type.lower() in ['gru', 'all']:
         name = 'GRU'
         print_bold(f"7.3) {space}Running a GRU Model...", ui, n_before=1, n_after=1)
-        # display(HTML("<br><b>7.3) &nbspRunning a GRU Model...</b><br><br>"))
-        model, pred, rmse, norm_rmse = build_gru_model(
-                                    X_train, y_train, X_val, y_val, n_input,
-                                    n_output, n_features, n_units, d_rate,
-                                    n_epoch, n_batch, verbose
-                                    )
-        score_val = rmse if score_type == 'rmse' else norm_rmse
+        gru = GRUWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+        gru.fit(X_train, y_train, n_epoch, n_batch, verbose)
+        model, pred, score = gru.evaluate(X_test, y_test, score_type)
         model_store = {
             'model': model,
             'forecast': pred,
-            f'{score_type}': score_val
+            f'{score_type}': score
             }
         model_dict.save(model_store, name)
 
     if model_type.lower() in ['convlstm', 'all']:
         name = 'CONVLSTM'
         print_bold(f"7.4) {space}Running a ConvLSTM Model...", ui, n_before=1, n_after=1)
-        # display(HTML("<br><b>7.4) &nbspRunning a ConvLSTM Model...</b><br><br>"))
-        model, pred, rmse, norm_rmse = build_convlstm_model(X_train, y_train, X_val, y_val,
-                                                            l_subseq=n_output, # length of subsequence
-                                                            n_col=n_output,    # length of "image" col
-                                                            n_units=n_units,
-                                                            d_rate=d_rate,
-                                                            n_epoch=n_epoch,
-                                                            n_batch=n_batch)
-        score_val = rmse if score_type == 'rmse' else norm_rmse
+        conv = ConvLSTMWrapper(n_steps=int(n_input/n_output), # num of steps
+                               l_subseq=n_output, # len of subsequence
+                               n_row=1,  # len of "image" row, can be left as 1
+                               n_col=n_output,    # len of "image" col
+                               n_features=n_features, n_units=n_units,
+                               d_rate=d_rate, optimizer=opt, loss=loss
+                               )
+        conv.fit(X_train, y_train, n_epoch, n_batch, verbose)
+        model, pred, score = conv.evaluate(X_test, y_test, score_type)
         model_store = {
             'model': model,
             'forecast': pred,
-            f'{score_type}': score_val
+            f'{score_type}': score
             }
         model_dict.save(model_store, name)
 
-    # Print out the best model based on lowest given score_type
-    f1_stats = {}
+    # Print out the best DL model based on lowest given score_type
+    final_stats = {}
     for key, val in model_dict.get().items():
-        f1_stats[key] = model_dict.get()[key][score_type]
-    best_model_name = min(f1_stats.items(), key=operator.itemgetter(1))[0]
+        final_stats[key] = model_dict.get()[key][score_type]
+    best_model_name = min(final_stats.items(), key=operator.itemgetter(1))[0]
 
     print("\n-----------------------------------------------------------------")
     print("-----------------------------------------------------------------")
-    print_bold("Best model is:", ui, n_before=1)
-    # display(HTML("<br><b>Best model is:</b>"))
+    print_bold("The best deep learning model is:", ui, n_before=1)
     print(f"    {best_model_name}")
-    # best_model = model_dict[best_model_name]['model']
-    # print('    Best Model Forecasts: %s' %ml_dict[best_model_name]['forecast'])
-    print("    Best model score: %0.2f" % model_dict.get()[best_model_name][score_type])
+    best_score = model_dict.get()[best_model_name][score_type]
+    print(f"    {score_type.upper()} score: {best_score:.4f}")
     end_time = time.time()
     run_time = end_time - start_time
-    print(f"\nTotal package runtime: {round(run_time/60, 2)} min")
+    print(f"\nTotal package runtime: {(run_time/60):.2f} min")
 
     return data_dict.get(), model_dict.get()

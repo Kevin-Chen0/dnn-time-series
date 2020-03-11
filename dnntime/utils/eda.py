@@ -24,7 +24,7 @@ import plotly.graph_objects as go
 
 
 def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
-            x_label: str = "Datetime", width: int = 10, height: int = 4,
+            x_label: str = "Date", width: int = 10, height: int = 4,
             line_width: float = 0.1) -> None:
     if isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex):
         df = df.copy()  # prevents from modifying original df
@@ -107,8 +107,8 @@ def ts_sub_split(df: pd.DataFrame, split: str = 'y', shift: int = 0) -> Tuple[Li
     return sub, idx
 
 
-def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
-                           y_label: str, x_label: str = "Datetime", 
+def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
+                           title: str, y_label: str, x_label: str = "Date",
                            line_width: float = 0.1, model: str = 'additive',
                            plotly: bool = False, prophet: bool = False) -> None:
 
@@ -164,6 +164,19 @@ def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str, title: st
 def acf_pacf_plot(df: pd.DataFrame, target: str, title: str = "",
                   lags: List[int] = [24], figsize: Tuple[int, int] = (20,8)
                   ) -> None:
+    """
+    Autocorrelation Function (ACF) and Partial-Autocorrelation (PACF) Analysis
+    Source: https://www.kaggle.com/nicholasjhana/univariate-time-series-forecasting-with-keras
+
+    Parameters
+    ----------
+    df : DESCRIPTION
+    target : DESCRIPTION
+    title : DESCRIPTION
+    lags : DESCRIPTION
+    figsize : DESCRIPTION
+
+    """
     for l in lags:
         fig, axs = plt.subplots(1, 2, figsize=figsize)
         plot_acf(df[target], ax=axs[0], lags=l)

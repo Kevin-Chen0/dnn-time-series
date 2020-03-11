@@ -28,13 +28,15 @@ supervise:
     test_set: 'month'  # size of the test set, taken from the last <input> of dataset
     max_gap: 0.01
 dnn:
-    model_type: 'all'
+    model_type: 'convlstm'
     epochs: 5
     batch_size: 256
     n_features: 1  # number of feature(s)
     n_units: 128   # number of units per layer
     d_rate: 0.15   # dropout rate
-    verbose: 0     # description for model 'fit' and 'predict'
+    optimizer: 'adam'
+    objective_function: 'mse'  # the loss value minimized by the dnn model
+    verbose: 1     # description for model 'fit' and 'evaluate'
 evaluate:
     score_type: 'rmse'
 meta:

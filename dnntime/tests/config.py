@@ -279,6 +279,20 @@ def validate_config(config: pd.DataFrame) -> None:
     assert isinstance(
         config['dnn']['d_rate'], float
     ), "'d_rate' value must be an float type."
+    # Validate variable <opt>
+    assert (
+        'optimizer' in config['dnn'].keys()
+    ), "'dnn'->'optimizer' key is not found in the config file."
+    assert isinstance(
+        config['dnn']['optimizer'], str
+    ), "'optimizer' value must be an str type."
+    # Validate variable <loss>
+    assert (
+        'objective_function' in config['dnn'].keys()
+    ), "'dnn'->'objective_function' key is not found in the config file."
+    assert isinstance(
+        config['dnn']['objective_function'], str
+    ), "'objective_function' value must be an str type."
     # Validate <verbose>
     assert (
         'verbose' in config['dnn'].keys()
