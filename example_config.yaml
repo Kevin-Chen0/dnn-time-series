@@ -1,50 +1,42 @@
 # Config template to input parameters into dnntime
-extract: True
-extract_conf:
+extract:
     file_path: 'example_datasets/energy_dataset.csv'
     delineator: ','
     datetime_column: 'time'
     target_column: 'total load actual'
-preprocess: True
-preprocess_conf:
+preprocess:
     univariate: True
     time_interval: 'hourly'
-    auto_clean: True
-    auto_clean_conf:  # this entire block can be omitted if 'auto_clean' is False
-        timezone: 'Europe/Amsterdam'
-        negative_values: False
-        nan_fill_type: 'linear'
-analyze: True
-analyze_conf:
+    # auto_clean:  # this entire block can be omitted if 'auto_clean' is False
+    #     timezone: 'Europe/Amsterdam'
+    #     negative_values: False
+    #     nan_fill_type: 'linear'
+analyze:
     title: 'PJME Regional Power Demand Time-Series'
     x_label: 'Datetime'
     y_label: 'Total Demand (MW)'
     confidence_interval: 0.95
-transform: True
-transform_conf:
+transform:
     steps: ['box-cox', 'deseasonalize']
     decomposition_model: 'additive'
     standardize: True
-supervise: True
-supervise_conf:
+supervise:
     training_period: 'biweek'  # walk-forward validation input timesteps
     forecast_period: 'day'  # walk-forward validation output timesteps
     validation_set:  'biweek'  # size of the validation set, taken from period prior to 
     test_set: 'month'  # size of the test set, taken from the last <input> of dataset
     max_gap: 0.01
-dnn: True
-dnn_conf:
+dnn:
     model_type: 'convlstm'
     epochs: 5
     batch_size: 256
-    n_features: 1  # number of feature(s)
+    # n_features: 1  # number of feature(s)
     n_units: 128   # number of units per layer
     d_rate: 0.15   # dropout rate
     optimizer: 'adam'
     objective_function: 'mse'  # the loss value minimized by the dnn model
     verbose: 1     # description for model 'fit' and 'evaluate'
-evaluate: True
-evaluate_conf:
+evaluate:
     score_type: 'rmse'
-meta_conf:
-    user_interface: 'notebook'  # either 'console' (terminal) or 'notebook' (IPython)
+meta:
+    user_interface: 'console'  # either 'console' (default) or 'notebook'

@@ -119,14 +119,12 @@ def run_package(
     # Check the config dict to ensure it passes all of the assertions
     validate_config(config)
     # Initializing meta config variable(s) prior to STEPS
-    ui = config['meta_conf']['user_interface']
-    extract = config['extract']
-    preprocess = config['preprocess']
-    analyze = config['analyze']
-    transform = config['transform']
-    supervise = config['supervise']
-    dnn = config['dnn']
-    evaluate = config['evaluate']
+    try:
+        ui = config['meta']['user_interface']
+    except KeyError:
+        ui = 'console'
+        # print("'meta' section is omitted in config, therefore set UI as "
+        #       "'console' by default.")
     space = "&nbsp" if ui == 'notebook' else " "
     # Store all of the data ETL checkpoints in a dict that will be returned
     data_dict = CheckpointDict('data')
@@ -137,25 +135,27 @@ def run_package(
     print_bold(f"STEP 1) {space}Extract Data from Source", ui)
     print("-------------------------------------------------------------------\n")
 
-    if extract:
+    try:
         # Initializing immutable config variables for STEP 1) and beyond
-        extract_conf = config['extract_conf']
-        file_path = extract_conf['file_path']
-        delinator = extract_conf['delineator'] if extract_conf['delineator'] != '' else ','
-        dt_col = extract_conf['datetime_column']  # data column that contains time-series
-        target = extract_conf['target_column']    # data column that contains y-value
-    
+        extract = config['extract']
+        file_path = extract['file_path']
+        delinator = extract['delineator'] if extract['delineator'] != '' else ','
+        dt_col = extract['datetime_column']  # data column that contains time-series
+        target = extract['target_column']    # data column that contains y-value
+
         assert file_path.endswith(
             ".csv"
         ), "Dataset CSV file not found. Please check filepath."
         # print(f"Extracting data from file source: '{FILE_PATH}'.")
         df = load_data(file_path, dt_col, delinator)
-    elif data is not None:
-        df = load_data(data, dt_col, delinator)
-        print(f"Using inputted DataFrame.")
-    else:
-        print("Data input not found in either file source or DataFrame.")
-        return        
+
+    except KeyError:
+        if data is not None:
+            df = load_data(data, dt_col, delinator)
+            print(f"'extract' from file path skipped, using direct data input instead.")
+        else:
+            print("Data input not found in either file source or DataFrame.")
+            return None, None
 
     data_dict.save(df, 'Original')
 
@@ -164,49 +164,50 @@ def run_package(
     print_bold(f"STEP 2) {space}Preprocessing I (Cleaning)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if preprocess:
+    try:
         # Initializing immutable config variables for STEP 2) and beyond
-        preprocess_conf = config['preprocess_conf']
-        univariate = preprocess_conf['univariate']
-        time_interval = preprocess_conf['time_interval']
-        auto_clean = preprocess_conf['auto_clean']
-    
+        preprocess = config['preprocess']
+        univariate = preprocess['univariate']
+        time_interval = preprocess['time_interval']
+
         if univariate:
             print(f"Set the dataset to univarate using target col of {target}.")
             df = df[target].to_frame()
             data_dict.save(df, 'Univarate')
-    
+
         freq, _ = interval_to_freq(time_interval)
         print(f"Frequency has been set to {freq}.\n")
-    
-        if auto_clean:
-            # Initializing immutable config variables for Auto-Clean specifically
-            clean_conf = preprocess_conf['auto_clean_conf']
-            timezone = clean_conf['timezone']
-            allow_neg = clean_conf['negative_values']
-            fill = clean_conf['nan_fill_type']
+
+        if 'auto_clean' in preprocess.keys():
+            # Initializing immutable config variables for 'auto_clean' specifically
+            clean = preprocess['auto_clean']
+            timezone = clean['timezone']
+            allow_neg = clean['negative_values']
+            fill = clean['nan_fill_type']
     
             print("Begin initial cleaning of the extract dataset...")
             df = clean_data(df, target, timezone, freq, allow_neg, fill)
             data_dict.save(df, 'Clean')
+
         else:
-            print("Automatic cleaning of data has been skipped.")
-    else:
-        print("Skipping cleaning preprocessing step based on user input.")
+            print("'auto_clean' section is omitted in config, therefore "
+                  "skipping this substep in the 'preprocess' section.")
+
+    except KeyError:
+        print("'preprocess' section is omitted in config, therefore skipping this step.")
 
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 3) {space}EDA I (General)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if analyze:
+    try:
         # Initializing immutable config variables for STEP 3) and beyond
-        analyze_conf = config['analyze_conf']
-        ci = analyze_conf['confidence_interval']
-        title = analyze_conf['title']
-        x_label = analyze_conf['x_label']
-        y_label = analyze_conf['y_label']
-    
+        analyze = config['analyze']
+        title = analyze['title']
+        x_label = analyze['x_label']
+        y_label = analyze['y_label']
+
         # Prevent errors
         pd.plotting.register_matplotlib_converters()
     
@@ -217,16 +218,19 @@ def run_package(
                 x_label=x_label,
                 y_label=y_label
                 )
-    else:
-        print("Skipping general EDA step based on user input.")
+
+    except KeyError:
+        print("'analyze' section is omitted in config, therefore skipping this step.")
+
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 4) {space}EDA II (Time-Series Stats)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if analyze:
+    try:
         # Initializing immutable config variables for STEP 4) and beyond
-        ci = analyze_conf['confidence_interval']
+        analyze = config['analyze']
+        ci = analyze['confidence_interval']
     
         print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).", 
                    ui, n_after=1)
@@ -259,22 +263,23 @@ def run_package(
         #            n_before=1, n_after=1)
     
         # print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
-    else:
-        print("Skipping statistical time-series EDA step based on user input.")
+
+    except KeyError:
+        print("'analyze' section is omitted in config, therefore skipping this step.")
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 5) {space}Preprocessing II (Transformations)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if transform:
+    try:
         # Initializing immutable config variables for STEP 5) and beyond
-        transform_conf = config['transform_conf']
-        trans_steps = transform_conf['steps']
-        decom_model = transform_conf['decomposition_model']
-        standardize = transform_conf['standardize']
+        transform = config['transform']
+        trans_steps = transform['steps']
+        decom_model = transform['decomposition_model']
+        standardize = transform['standardize']
     
         substep = 1
-    
+
         for step in trans_steps:
             standardize_note = ''
             if step in ['box-cox', 'yeo-johnson', 'log']:
@@ -297,9 +302,11 @@ def run_package(
             data_dict.save(df, step.title()+standardize_note) 
             substep += 1
             print()
-    else:
-        print("Skipping transformation preprocessing step based on user input.")
-        
+
+    except KeyError:
+        print("'transform' section is omitted in config, therefore skipping this step.")
+
+
     ##################################################################################################
     ### Transform dataset into supervised ML problem with walk-forward validation.
     ### Shifting time-steps
@@ -308,22 +315,22 @@ def run_package(
     print_bold(f"STEP 6) {space}Preprocessing III (Make Supervised)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if supervise:
+    try:
         # Initializing immutable config variables for STEP 6) and beyond
-        supervise_conf = config['supervise_conf']
-        train_period = supervise_conf['training_period']
-        fcast_period = supervise_conf['forecast_period']
-        val_set = supervise_conf['validation_set']
-        test_set = supervise_conf['test_set']
-        max_gap = supervise_conf['max_gap']
-    
+        supervise = config['supervise']
+        train_period = supervise['training_period']
+        fcast_period = supervise['forecast_period']
+        val_set = supervise['validation_set']
+        test_set = supervise['test_set']
+        max_gap = supervise['max_gap']
+
         # Converting all 'str' periods into #timesteps based of the stated 'freq'
         n_input = interval_to_timesteps(train_period, freq)  # num input timesteps
         n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
         n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
         n_test = interval_to_timesteps(test_set, freq)  # test dataset size
         print("Performing walk-forward validation.")
-    
+
         orig, train, val, test = split_data(df,
                                             n_test=n_test,  # size of test set
                                             n_val=n_val,  # size of validation set
@@ -336,7 +343,7 @@ def run_package(
         X_train, y_train, t_train = train
         X_val, y_val, t_val = val
         X_test, y_test, t_test = test
-    
+
         print("Converted time-series into supervised leraning problem using walk-forward validation:")
         print(f"    Time-series frequency: '{freq}'.")
         print(f"    Input period: {X.shape[1]} timesteps, or 'bikweek'.")
@@ -346,7 +353,7 @@ def run_package(
         print(f"    Training dataset: {X_train.shape[0]} observations.")
         print(f"    Validation dataset: {X_val.shape[0]} observations, or '{val_set}'.")
         print(f"    Testing dataset: {X_test.shape[0]} observations, or '{test_set}'.")
-    
+
         train_prct = len(X_train)/len(X)*100
         val_prct = len(X_val)/len(X)*100
         test_prct = len(X_test)/len(X)*100
@@ -354,7 +361,7 @@ def run_package(
         print("\nSplit %:")
         print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: " + \
               f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
-    
+
         print("\nDataset shapes:")
         print(f"    Original:")
         print(f"        data shape = {df.shape}")
@@ -374,7 +381,7 @@ def run_package(
         print(f"        X_test.shape = {X_test.shape}")
         print(f"        y_test.shape = {y_test.shape}")
         print(f"        t_test.shape = {t_test.shape}")
-    
+
         data = {
             'X_train': X_train,
             'y_train': y_train,
@@ -386,111 +393,119 @@ def run_package(
             'y_test': y_test,
             't_test': t_test
         }
-    
+
         data_dict.save(data, 'Make Supervised')
-    else:
-        print("Skipping supervised preprocessing step based on user input.")
+
+    except KeyError:
+        print("'supervise' section is omitted in config, therefore skipping this step.")
+
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 7) {space}Model Search (NNs)", ui)
     print("-------------------------------------------------------------------\n")
 
-    if len(tf.config.list_physical_devices('GPU')) > 0:
-        print("GPU is enabled.")
-    else:
-        print("Running on CPU as GPU is not enabled.")
+    try:
+        # Initializing immutable config variables for STEP 7) and beyond
+        dnn = config['dnn']
+        model_type = dnn['model_type']
+        n_epoch = dnn['epochs']
+        n_batch = dnn['batch_size']
+        n_features = 1 if univariate else dnn['n_features']  # number of features
+        n_units = dnn['n_units']  # number of units per layer
+        d_rate = dnn['d_rate']  # dropout rate
+        opt = dnn['optimizer']
+        loss = dnn['objective_function']
+        verbose = dnn['verbose']
 
-    # Initializing immutable config variables for STEP 7) and beyond
-    dnn_conf = config['dnn_conf']
-    model_type = dnn_conf['model_type']
-    n_epoch = dnn_conf['epochs']
-    n_batch = dnn_conf['batch_size']
-    n_features = 1 if univariate else dnn_conf['n_features']  # number of features
-    n_units = dnn_conf['n_units']  # number of units per layer
-    d_rate = dnn_conf['d_rate']  # dropout rate
-    opt = dnn_conf['optimizer']
-    loss = dnn_conf['objective_function']
-    verbose = dnn_conf['verbose']
+        evaluate = config['evaluate']
+        score_type = evaluate['score_type']
+    
+        if len(tf.config.list_physical_devices('GPU')) > 0:
+            print("GPU is enabled.")
+        else:
+            print("Running on CPU as GPU is not enabled.")
 
-    evaluate_conf = config['evaluate_conf']
-    score_type = evaluate_conf['score_type']
+        # Store all of the data ETL checkpoints in a dict that will be returned
+        model_dict = CheckpointDict('model')
 
-    # Store all of the data ETL checkpoints in a dict that will be returned
-    model_dict = CheckpointDict('model')
+        # Begin the DL model running process #####################################
+        if model_type.lower() in ['rnn', 'all']:
+            name = 'RNN'
+            print_bold(f"7.1) {space}Running a RNN Model...", ui, n_before=1, n_after=1)
+            rnn = RNNWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            rnn.fit(X_train, y_train, n_epoch, n_batch, verbose)
+            model, pred, score = rnn.evaluate(X_test, y_test, score_type)
+            model_store = {
+                'model': model,
+                'forecast': pred,
+                f'{score_type}': score
+                }
+            model_dict.save(model_store, name)
 
-    # Begin the DL model running process #####################################
-    if model_type.lower() in ['rnn', 'all']:
-        name = 'RNN'
-        print_bold(f"7.1) {space}Running a RNN Model...", ui, n_before=1, n_after=1)
-        rnn = RNNWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
-        rnn.fit(X_train, y_train, n_epoch, n_batch, verbose)
-        model, pred, score = rnn.evaluate(X_test, y_test, score_type)
-        model_store = {
-            'model': model,
-            'forecast': pred,
-            f'{score_type}': score
-            }
-        model_dict.save(model_store, name)
+        if model_type.lower() in ['lstm', 'all']:
+            name = 'LSTM'
+            print_bold(f"7.2) {space}Running a LSTM Model...", ui, n_before=1, n_after=1)
+            lstm = LSTMWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            lstm.fit(X_train, y_train, n_epoch, n_batch, verbose)
+            model, pred, score = lstm.evaluate(X_test, y_test, score_type)
+            model_store = {
+                'model': model,
+                'forecast': pred,
+                f'{score_type}': score
+                }
+            model_dict.save(model_store, name)
 
-    if model_type.lower() in ['lstm', 'all']:
-        name = 'LSTM'
-        print_bold(f"7.2) {space}Running a LSTM Model...", ui, n_before=1, n_after=1)
-        lstm = LSTMWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
-        lstm.fit(X_train, y_train, n_epoch, n_batch, verbose)
-        model, pred, score = lstm.evaluate(X_test, y_test, score_type)
-        model_store = {
-            'model': model,
-            'forecast': pred,
-            f'{score_type}': score
-            }
-        model_dict.save(model_store, name)
+        if model_type.lower() in ['gru', 'all']:
+            name = 'GRU'
+            print_bold(f"7.3) {space}Running a GRU Model...", ui, n_before=1, n_after=1)
+            gru = GRUWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            gru.fit(X_train, y_train, n_epoch, n_batch, verbose)
+            model, pred, score = gru.evaluate(X_test, y_test, score_type)
+            model_store = {
+                'model': model,
+                'forecast': pred,
+                f'{score_type}': score
+                }
+            model_dict.save(model_store, name)
 
-    if model_type.lower() in ['gru', 'all']:
-        name = 'GRU'
-        print_bold(f"7.3) {space}Running a GRU Model...", ui, n_before=1, n_after=1)
-        gru = GRUWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
-        gru.fit(X_train, y_train, n_epoch, n_batch, verbose)
-        model, pred, score = gru.evaluate(X_test, y_test, score_type)
-        model_store = {
-            'model': model,
-            'forecast': pred,
-            f'{score_type}': score
-            }
-        model_dict.save(model_store, name)
+        if model_type.lower() in ['convlstm', 'all']:
+            name = 'CONVLSTM'
+            print_bold(f"7.4) {space}Running a ConvLSTM Model...", ui, n_before=1, n_after=1)
+            conv = ConvLSTMWrapper(n_steps=int(n_input/n_output), # num of steps
+                                   l_subseq=n_output, # len of subsequence
+                                   n_row=1,  # len of "image" row, can be left as 1
+                                   n_col=n_output,    # len of "image" col
+                                   n_features=n_features, n_units=n_units,
+                                   d_rate=d_rate, optimizer=opt, loss=loss
+                                   )
+            conv.fit(X_train, y_train, n_epoch, n_batch, verbose)
+            model, pred, score = conv.evaluate(X_test, y_test, score_type)
+            model_store = {
+                'model': model,
+                'forecast': pred,
+                f'{score_type}': score
+                }
+            model_dict.save(model_store, name)
 
-    if model_type.lower() in ['convlstm', 'all']:
-        name = 'CONVLSTM'
-        print_bold(f"7.4) {space}Running a ConvLSTM Model...", ui, n_before=1, n_after=1)
-        conv = ConvLSTMWrapper(n_steps=int(n_input/n_output), # num of steps
-                               l_subseq=n_output, # len of subsequence
-                               n_row=1,  # len of "image" row, can be left as 1
-                               n_col=n_output,    # len of "image" col
-                               n_features=n_features, n_units=n_units,
-                               d_rate=d_rate, optimizer=opt, loss=loss
-                               )
-        conv.fit(X_train, y_train, n_epoch, n_batch, verbose)
-        model, pred, score = conv.evaluate(X_test, y_test, score_type)
-        model_store = {
-            'model': model,
-            'forecast': pred,
-            f'{score_type}': score
-            }
-        model_dict.save(model_store, name)
+        # Print out the best DL model based on lowest given score_type
+        final_stats = {}
+        for key, val in model_dict.get().items():
+            final_stats[key] = model_dict.get()[key][score_type]
+        best_model_name = min(final_stats.items(), key=operator.itemgetter(1))[0]
 
-    # Print out the best DL model based on lowest given score_type
-    final_stats = {}
-    for key, val in model_dict.get().items():
-        final_stats[key] = model_dict.get()[key][score_type]
-    best_model_name = min(final_stats.items(), key=operator.itemgetter(1))[0]
-
-    print("\n-----------------------------------------------------------------")
-    print("-----------------------------------------------------------------")
-    print_bold("The best deep learning model is:", ui, n_before=1)
-    print(f"    {best_model_name}")
-    best_score = model_dict.get()[best_model_name][score_type]
-    print(f"    {score_type.upper()} score: {best_score:.4f}")
-    end_time = time.time()
-    run_time = end_time - start_time
-    print(f"\nTotal package runtime: {(run_time/60):.2f} min")
+        print("\n-----------------------------------------------------------------")
+        print("-----------------------------------------------------------------")
+        print_bold("The best deep learning model is:", ui, n_before=1)
+        print(f"    {best_model_name}")
+        best_score = model_dict.get()[best_model_name][score_type]
+        print(f"    {score_type.upper()} score: {best_score:.4f}")
+        end_time = time.time()
+        run_time = end_time - start_time
+        print(f"\nTotal package runtime: {(run_time/60):.2f} min")
+    except KeyError:
+        print("'dnn' section is omitted in config, therefore skipping this " + \
+              "step. Only data_dict is returned, leaving model_dict as None."
+              )
+        return data_dict.get(), None
 
     return data_dict.get(), model_dict.get()
