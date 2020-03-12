@@ -7,148 +7,180 @@ def validate_config(config: pd.DataFrame) -> None:
 
     # Before STEPS ###########################################################
     if 'meta' in config.keys():
+        meta = config['meta']
+        path = "'meta'->"
         # Validate variable <ui>
         assert (
-            'user_interface' in config['meta'].keys()
-        ), "'meta'-->'user_interface' key is not found in the config file."
+            'user_interface' in meta.keys()
+        ), f"{path}'user_interface' key is not found in the config file."
         assert isinstance(
-            config['meta']['user_interface'], str
-        ), "'meta'-->'user_interface' value must be a str type."
+            meta['user_interface'], str
+        ), f"{path}'user_interface' value must be a str type."
         valid_ui = [
             'notebook',
             'console'
         ]
-        assert len(set([config['meta']['user_interface']]) - set(valid_ui)) == 0, \
-               "'meta'-->'user_interface' value must contain one of the " + \
+        assert len(set([meta['user_interface']]) - set(valid_ui)) == 0, \
+               f"{path}'user_interface' value must contain one of the " + \
                f"following options: {valid_ui}."
 
     # For STEP 1) Extract Data from Source ###################################
     if 'extract' in config.keys():
+        extract = config['extract']
+        path = "'extract'->"
         # Validate variable <file_path>
         assert (
-            'file_path' in config['extract'].keys()
-        ), "'extract'->'file_path' key is not found in the config file."
-        assert isinstance(
-            config['extract']['file_path'], str
-        ), "'file_path' value must be a str type."
+            'file_path' in extract.keys()
+        ), f"'extract'->'file_path' key is not found in the config file."
+        assert isinstance(extract['file_path'], str
+        ), f"{path}'file_path' value must be a str type."
         # Validate variable <delineator>
         assert (
-            'delineator' in config['extract'].keys()
-        ), "'extract'->'delineator' key is not found in the config file."
+            'delineator' in extract.keys()
+        ), f"{path}'delineator' key is not found in the config file."
         assert isinstance(
-            config['extract']['delineator'], str
+            extract['delineator'], str
         ), "'delineator' value must be a str type."
         # Validate variable <dt_col>
         assert (
-            'datetime_column' in config['extract'].keys()
-        ), "'extract'->'datetime_column' key is not found in the config file."
+            'datetime_column' in extract.keys()
+        ), f"{path}'datetime_column' key is not found in the config file."
         assert isinstance(
-            config['extract']['datetime_column'], str
+            extract['datetime_column'], str
         ), "'datetime_column' value must be a str type."
         # Validate <target>
         assert (
-            'target_column' in config['extract'].keys()
-        ), "'extract'->'target_column' key is not found in the config file."
+            'target_column' in extract.keys()
+        ), f"{path}'target_column' key is not found in the config file."
         assert isinstance(
-            config['extract']['target_column'], str
+            extract['target_column'], str
         ), "'target_column' value must be a str type."
 
     # For STEP 2) Preprocessing I (Cleaning) #################################
     if 'preprocess' in config.keys():
+        preprocess = config['preprocess']
+        path = "'preprocess'->"
         # Validate variable <univariate>
         assert (
-            'univariate' in config['preprocess'].keys()
-        ), "'preprocess'->'univariate' key is not found in the config file."
+            'univariate' in preprocess.keys()
+        ), f"{path}'univariate' key is not found in the config file."
         assert isinstance(
-            config['preprocess']['univariate'], bool
+            preprocess['univariate'], bool
         ), "'univariate' value must be a bool type."
         # Validate variable <time_interval>
         assert (
-            'time_interval' in config['preprocess'].keys()
-        ), "'preprocess'->'time_interval' key is not found in the config file."
+            'time_interval' in preprocess.keys()
+        ), f"{path}'time_interval' key is not found in the config file."
         assert isinstance(
-            config['preprocess']['time_interval'], str
+            preprocess['time_interval'], str
         ), "'time_interval' value must be a str type."
         # Validate sub-section <auto_clean> given that it is not omitted
-        if 'auto_clean' in config['preprocess'].keys():
+        if 'auto_clean' in preprocess.keys():
+            clean = preprocess['auto_clean']
+            path += "'auto_clean'->"
             # Validate variable <timezone>
             assert (
-                'auto_clean' in config['preprocess'].keys()
-            ), "'preprocess'->'auto_clean' key is not found in the config file."
-            assert (
-                'timezone' in config['preprocess']['auto_clean'].keys()
-            ), "'preprocess'->'auto_clean'->'timezone' key is not found " + \
-               "in the config file."
+                'timezone' in clean.keys()
+            ), f"{path}'timezone' key is not found in the config file."
             assert isinstance(
-                config['preprocess']['auto_clean']['timezone'], str
+                clean['timezone'], str
             ), "'timezone' value must be a str type."
             assert (
-                config['preprocess']['auto_clean']['timezone'] in pytz.all_timezones or
-                config['preprocess']['auto_clean']['timezone'] == ''
+                clean['timezone'] in pytz.all_timezones or clean['timezone'] == ''
             ), "'timezone' value must be a valid pytz timezone or is left ''."
             # Validate variable <allow_neg>
             assert (
-                'negative_values' in config['preprocess']['auto_clean'].keys()
-            ), "'preprocess'->'auto_clean'->'negative_values' key is not " + \
+                'allow_negatives' in clean.keys()
+            ), f"{path}'allow_negatives' key is not " + \
                "found in the config file."
             assert isinstance(
-                config['preprocess']['auto_clean']['negative_values'], bool
-            ), "'negative_values' value must be a bool type."
+                clean['allow_negatives'], bool
+            ), "'allow_negatives' value must be a bool type."
+            # Validate variable <all_num>
+            assert (
+                'all_numeric' in clean.keys()
+            ), f"{path}'all_numeric' key is not " + \
+               "found in the config file."
+            assert isinstance(
+                clean['all_numeric'], bool
+            ), "'all_numeric' value must be a bool type."
             # Validate variable <fill>
             assert (
-                'nan_fill_type' in config['preprocess']['auto_clean'].keys()
-            ), "'preprocess'->'auto_clean'->'nan_fill_type' key is not " + \
+                'nan_fill_type' in clean.keys()
+            ), f"{path}'nan_fill_type' key is not " + \
                "found in the config file."
             assert isinstance(
-                config['preprocess']['auto_clean']['nan_fill_type'], str
+                clean['nan_fill_type'], str
             ), "'nan_fill_type' value must be a str type."
-
+            valid_fills = [
+                'linear', 'time', 'index', 'pad', 'nearest', 'zero', 'slinear',
+                'quadratic', 'cubic', 'krogh', 'pchip', 'akima', 'from_derivatives'
+            ]
+            assert len(set([clean['nan_fill_type']]) - set(valid_fills)) == 0, \
+                   f"{path}'nan_fill_type' value must be within DataFrame.interpolate: " + \
+                   "https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html"
+            # Validate variable <output_type>
+            assert (
+                'output_type' in clean.keys()
+            ), f"{path}'output_type' key is not " + \
+               "found in the config file."
+            assert isinstance(
+                clean['output_type'], str
+            ), "'output_type' value must be a str type."
+            valid_outputs = [
+                'reg',
+                'regression',
+                'class',
+                'classification',
+            ]
+            assert len(set([clean['output_type']]) - set(valid_outputs)) == 0, \
+                   f"{path}'output_type' value must contain one of the " + \
+                   f"following options: {valid_outputs}."
+ 
     # For STEPS 3-4) EDA I & II (General & Time-Series Stats) ################
     if 'analyze' in config.keys():
-        assert (
-            'analyze' in config.keys()
-        ), "'analyze' key is not found in the config file."
+        analyze = config['analyze']
+        path = "'analyze'->"
         # Validate variable <title>
         assert (
-            'title' in config['analyze'].keys()
-        ), "'analyze'->'title' key is not found in the config file."
+            'title' in analyze.keys()
+        ), f"{path}'title' key is not found in the config file."
         assert isinstance(
-            config['analyze']['title'], str
+            analyze['title'], str
         ), "'file_path' value must be a str type."
         # Validate variable <x_label>
         assert (
-            'x_label' in config['analyze'].keys()
-        ), "'analyze'->'x_label' key is not found in the config file."
+            'x_label' in analyze.keys()
+        ), f"{path}'x_label' key is not found in the config file."
         assert isinstance(
-            config['analyze']['x_label'], str
+            analyze['x_label'], str
         ), "'x_label' value must be a str type."
         # Validate variable <y_label>
         assert (
-            'y_label' in config['analyze'].keys()
-        ), "'analyze'->'y_label' key is not found in the config file."
+            'y_label' in analyze.keys()
+        ), f"{path}'y_label' key is not found in the config file."
         assert isinstance(
-            config['analyze']['y_label'], str
+            analyze['y_label'], str
         ), "'y_label' value must be a str type."
         # Validate variable <ci>
         assert (
-            'confidence_interval' in config['analyze'].keys()
-        ), "'analyze'->'confidence_interval' key is not found in the config file."
+            'confidence_interval' in analyze.keys()
+        ), f"{path}'confidence_interval' key is not found in the config file."
         assert isinstance(
-            config['analyze']['confidence_interval'], float
+            analyze['confidence_interval'], float
         ), "'y_label' value must be a float type."
 
     # For STEP 5) Preprocessing II (Transformations) #########################
     if 'transform' in config.keys():
-        assert (
-            'transform' in config.keys()
-        ), "'transform' key is not found in the config file."
+        transform = config['transform']
+        path = "'transform'->"
         # Validate variable <trans_steps>
         assert (
-            'steps' in config['transform'].keys()
-        ), "'transform'-->'steps' key is not found in the config file."
+            'steps' in transform.keys()
+        ), f"{path}'steps' key is not found in the config file."
         assert isinstance(
-            config['transform']['steps'], list
-        ), "'transform'-->'steps' value must be a list type."
+            transform['steps'], list
+        ), f"{path}'steps' value must be a list type."
         valid_steps = [
             'box-cox',
             'yeo-johnson',
@@ -157,138 +189,129 @@ def validate_config(config: pd.DataFrame) -> None:
             'detrend',
             'residual-only',
         ]
-        assert len(set(config['transform']['steps']) - set(valid_steps)) == 0, \
-               f"'transform'-->'steps' valuess must be within the following: {valid_steps}."
+        assert len(set(transform['steps']) - set(valid_steps)) == 0, \
+               "{path}'steps' values must be within the following: {valid_steps}."
         # Validate variable <decom_model>
         assert (
-            'decomposition_model' in config['transform'].keys()
-        ), "'transform'-->'decomposition_model' key is not found in the config file."
+            'decomposition_model' in transform.keys()
+        ), f"{path}'decomposition_model' key is not found in the config file."
         assert isinstance(
-            config['transform']['decomposition_model'], str
-        ), "'transform'-->'decomposition_model' value must be a str type."
-        valid_decompositions = [
+            transform['decomposition_model'], str
+        ), f"{path}'decomposition_model' value must be a str type."
+        valid_decoms = [
             'additive',
             'multiplicative'
         ]
-        assert len(set([config['transform']['decomposition_model']]) - set(valid_decompositions)) == 0, \
-               "'transform'-->'decomposition_model' value must only contain the following: " + \
-               f"{valid_decompositions}."
+        assert len(set([transform['decomposition_model']]) - set(valid_decoms)) == 0, \
+               f"{path}'decomposition_model' value must only contain the following: " + \
+               f"{valid_decoms}."
         # Validate variable <standardize>
         assert (
-            'standardize' in config['transform'].keys()
-        ), "'transform'-->'standardize' key is not found in the config file."
+            'standardize' in transform.keys()
+        ), f"{path}'standardize' key is not found in the config file."
         assert isinstance(
-            config['transform']['standardize'], bool
-        ), "'transform'-->'standardize' value must be a bool type."
+            transform['standardize'], bool
+        ), f"{path}'standardize' value must be a bool type."
 
     # For STEP 6) Preprocessing III (Make Supervised) ########################
     if 'supervise' in config.keys():
-        assert (
-            'supervise' in config.keys()
-        ), "'supervise' key is not found in the config file."
+        supervise = config['supervise']
+        path = "'supervise'->"
         # Validate variable <train_period>
         assert (
-            'training_period' in config['supervise'].keys()
-        ), "'supervise'->'training_period' key is not found in the config file."
+            'training_period' in supervise.keys()
+        ), f"{path}'training_period' key is not found in the config file."
         assert isinstance(
-            config['supervise']['training_period'], str
+            supervise['training_period'], str
         ), "'training_period' value must be a str type."
         # Validate variable <fcast_period>
         assert (
-            'forecast_period' in config['supervise'].keys()
-        ), "'supervise'->'forecast_period' key is not found in the config file."
+            'forecast_period' in supervise.keys()
+        ), f"{path}'forecast_period' key is not found in the config file."
         assert isinstance(
-            config['supervise']['forecast_period'], str
+            supervise['forecast_period'], str
         ), "'forecast_period' value must be a str type."
         # Validate variable <val_set>
         assert (
-            'validation_set' in config['supervise'].keys()
-        ), "'supervise'->'validation_set' key is not found in the config file."
+            'validation_set' in supervise.keys()
+        ), f"{path}'validation_set' key is not found in the config file."
         assert isinstance(
-            config['supervise']['validation_set'], str
+            supervise['validation_set'], str
         ), "'validation_set' value must be a str type."
         # Validate <test_set>
         assert (
-            'test_set' in config['supervise'].keys()
-        ), "'supervise'->'test_set' key is not found in the config file."
+            'test_set' in supervise.keys()
+        ), f"{path}'test_set' key is not found in the config file."
         assert isinstance(
-            config['supervise']['test_set'], str
+            supervise['test_set'], str
         ), "'test_set' value must be a str type."
         # Validate <max_gap>
         assert (
-            'max_gap' in config['supervise'].keys()
-        ), "'supervise'->'max_gap' key is not found in the config file."
+            'max_gap' in supervise.keys()
+        ), f"{path}'max_gap' key is not found in the config file."
         assert isinstance(
-            config['supervise']['max_gap'], float
+            supervise['max_gap'], float
         ), "'max_gap' value must be a float type."
 
     # For STEP 7) Model Search (NNs) #########################################
     if 'dnn' in config.keys():
-        assert (
-            'dnn' in config.keys()
-        ), "'dnn' key is not found in the config file."
+        dnn = config['dnn']
+        path = "'dnn'->"
         # Validate variable <model>
         assert (
-            'model_type' in config['dnn'].keys()
-        ), "'dnn'->'model_type' key is not found in the config file."
+            'model_type' in dnn.keys()
+        ), f"{path}'model_type' key is not found in the config file."
         assert isinstance(
-            config['dnn']['model_type'], str
+            dnn['model_type'], str
         ), "'model_type' value must be an str type."
         # Validate variable <epochs>
         assert (
-            'epochs' in config['dnn'].keys()
-        ), "'dnn'->'epochs' key is not found in the config file."
+            'epochs' in dnn.keys()
+        ), f"{path}'epochs' key is not found in the config file."
         assert isinstance(
-            config['dnn']['epochs'], int
+            dnn['epochs'], int
         ), "'epochs' value must be an int type."
         # Validate variable <batch_size>
         assert (
-            'batch_size' in config['dnn'].keys()
-        ), "'dnn'->'batch_size' key is not found in the config file."
+            'batch_size' in dnn.keys()
+        ), f"{path}'batch_size' key is not found in the config file."
         assert isinstance(
-            config['dnn']['batch_size'], int
+            dnn['batch_size'], int
         ), "'batch_size' value must be an int type."
-        # Validate variable <n_features>
-        # assert (
-        #     'n_features' in config['dnn'].keys()
-        # ), "'dnn'->'n_features' key is not found in the config file."
-        # assert isinstance(
-        #     config['dnn']['n_features'], int
-        # ), "'n_features' value must be an int type."
         # Validate <n_units>
         assert (
-            'n_units' in config['dnn'].keys()
-        ), "'dnn'->'n_units' key is not found in the config file."
+            'n_units' in dnn.keys()
+        ), f"{path}'n_units' key is not found in the config file."
         assert isinstance(
-            config['dnn']['n_units'], int
+            dnn['n_units'], int
         ), "'n_units' value must be an int type."
         # Validate <d_rate>
         assert (
-            'd_rate' in config['dnn'].keys()
-        ), "'dnn'->'d_rate' key is not found in the config file."
+            'd_rate' in dnn.keys()
+        ), f"{path}'d_rate' key is not found in the config file."
         assert isinstance(
-            config['dnn']['d_rate'], float
+            dnn['d_rate'], float
         ), "'d_rate' value must be an float type."
         # Validate variable <opt>
         assert (
-            'optimizer' in config['dnn'].keys()
-        ), "'dnn'->'optimizer' key is not found in the config file."
+            'optimizer' in dnn.keys()
+        ), f"{path}'optimizer' key is not found in the config file."
         assert isinstance(
-            config['dnn']['optimizer'], str
+            dnn['optimizer'], str
         ), "'optimizer' value must be an str type."
         # Validate variable <loss>
         assert (
-            'objective_function' in config['dnn'].keys()
-        ), "'dnn'->'objective_function' key is not found in the config file."
+            'objective_function' in dnn.keys()
+        ), f"{path}'objective_function' key is not found in the config file."
         assert isinstance(
-            config['dnn']['objective_function'], str
+            dnn['objective_function'], str
         ), "'objective_function' value must be an str type."
         # Validate <verbose>
         assert (
-            'verbose' in config['dnn'].keys()
-        ), "'dnn'->'verbose' key is not found in the config file."
+            'verbose' in dnn.keys()
+        ), f"{path}'verbose' key is not found in the config file."
         assert isinstance(
-            config['dnn']['verbose'], int
+            dnn['verbose'], int
         ), "'verbose' value must be an int type."
         # Validate variable <score_type>
         assert (

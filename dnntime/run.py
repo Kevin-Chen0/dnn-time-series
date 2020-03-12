@@ -181,12 +181,14 @@ def run_package(
         if 'auto_clean' in preprocess.keys():
             # Initializing immutable config variables for 'auto_clean' specifically
             clean = preprocess['auto_clean']
-            timezone = clean['timezone']
-            allow_neg = clean['negative_values']
+            tz = clean['timezone']
+            allow_neg = clean['allow_negatives']
+            all_num = clean['all_numeric']
             fill = clean['nan_fill_type']
-    
+            out = clean['output_type']
+
             print("Begin initial cleaning of the extract dataset...")
-            df = clean_data(df, target, timezone, freq, allow_neg, fill)
+            df = clean_data(df, target, tz, freq, allow_neg, all_num, fill, out)
             data_dict.save(df, 'Clean')
 
         else:

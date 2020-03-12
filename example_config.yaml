@@ -7,10 +7,12 @@ extract:
 preprocess:
     univariate: True
     time_interval: 'hourly'
-    # auto_clean:  # this entire block can be omitted if 'auto_clean' is False
-    #     timezone: 'Europe/Amsterdam'
-    #     negative_values: False
-    #     nan_fill_type: 'linear'
+    auto_clean:  # this entire block can be omitted if 'auto_clean' is not needed
+        timezone: 'Europe/Amsterdam'
+        allow_negatives: False  # set to Fase if negative values are prohibited, hence set to NaN
+        all_numeric: True  # convert entire DataFrame into float64 (if not already done so)
+        nan_fill_type: 'linear'  # see: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html
+        output_type: 'reg'  # regression 'reg' or classication 'class'
 analyze:
     title: 'PJME Regional Power Demand Time-Series'
     x_label: 'Datetime'
@@ -28,9 +30,8 @@ supervise:
     max_gap: 0.01
 dnn:
     model_type: 'convlstm'
-    epochs: 5
-    batch_size: 256
-    # n_features: 1  # number of feature(s)
+    epochs: 2
+    batch_size: 512
     n_units: 128   # number of units per layer
     d_rate: 0.15   # dropout rate
     optimizer: 'adam'

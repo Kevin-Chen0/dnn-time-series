@@ -40,8 +40,8 @@ def load_data(data: Union[str, pd.DataFrame], dt_col: str, deln: str = ','
 
 
 def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq: 
-               str = 'H', allow_neg: bool = True, fill: str = 'linear',
-               learning_type: str = 'reg') -> pd.DataFrame:
+               str = 'H', allow_neg: bool = True, all_num:bool = False, fill: 
+               str = 'linear', learning_type: str = 'reg') -> pd.DataFrame:
 
     dtc = df.copy()
 
@@ -73,14 +73,19 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
     if tz_offset != 0:
         dtc.index = dtc.index.shift(tz_offset)
         print("    - Removed timezone by converting to UTC and then reshifting back. ")
-    # 4) Convert target col type to float is not already and removing any puncuations
-    if learning_type == 'reg' and dtc[target].dtype.kind != 'f':
-        dtc[target] = dtc[target].str.replace('[^\d\.]', '').astype(np.float32)
-        print(f"    - Converted target={target} col to float3 type.")
+    # 4) Convert all cols in DataFrame into float64 and removing any special char prior
+    if all_num:
+        dtc.apply(lambda x: x.astype(str).replace('[^\d\.]', '').astype(np.float64))
+        # dtc.apply(pd.to_numeric)
+    # 5) Convert only target col type to float64 if not already done by all_num
+    if learning_type == 'reg' and dtc[target].dtype.kind != 'f' and not all_num:
+        dtc[target] = dtc[target].astype(str).replace('[^\d\.]', '').astype(np.float64)
+        print(f"    - Converted target={target} col to float64 type.")
     # 5) Replace any negative number as NaN if target negative numbers are not allowed
     if not allow_neg:
         dtc[target][dtc[target] < 0] = np.NaN
-        print(f"    - Since negative values are unpermitted, all negative values found in dataset are converted to NaN.")
+        print(f"    - Since negative values are unpermitted, all negative " 
+              "values found in dataset are converted to NaN.")
     # 6) Fill the missing targetvalues via given interpolation in-place
     if dtc[target].isnull().sum() > 0:
         dtc[target].interpolate(fill, inplace=True)
