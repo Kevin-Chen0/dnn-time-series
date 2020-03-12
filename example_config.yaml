@@ -1,10 +1,12 @@
 # Config template to input parameters into dnntime
-extract:
+extract: True
+extract_conf:
     file_path: 'example_datasets/energy_dataset.csv'
     delineator: ','
     datetime_column: 'time'
     target_column: 'total load actual'
-preprocess:
+preprocess: True
+preprocess_conf:
     univariate: True
     time_interval: 'hourly'
     auto_clean: True
@@ -12,22 +14,26 @@ preprocess:
         timezone: 'Europe/Amsterdam'
         negative_values: False
         nan_fill_type: 'linear'
-analyze:
+analyze: True
+analyze_conf:
     title: 'PJME Regional Power Demand Time-Series'
     x_label: 'Datetime'
     y_label: 'Total Demand (MW)'
     confidence_interval: 0.95
-transform:
+transform: True
+transform_conf:
     steps: ['box-cox', 'deseasonalize']
     decomposition_model: 'additive'
     standardize: True
-supervise:
+supervise: True
+supervise_conf:
     training_period: 'biweek'  # walk-forward validation input timesteps
     forecast_period: 'day'  # walk-forward validation output timesteps
     validation_set:  'biweek'  # size of the validation set, taken from period prior to 
     test_set: 'month'  # size of the test set, taken from the last <input> of dataset
     max_gap: 0.01
-dnn:
+dnn: True
+dnn_conf:
     model_type: 'convlstm'
     epochs: 5
     batch_size: 256
@@ -37,7 +43,8 @@ dnn:
     optimizer: 'adam'
     objective_function: 'mse'  # the loss value minimized by the dnn model
     verbose: 1     # description for model 'fit' and 'evaluate'
-evaluate:
+evaluate: True
+evaluate_conf:
     score_type: 'rmse'
-meta:
+meta_conf:
     user_interface: 'notebook'  # either 'console' (terminal) or 'notebook' (IPython)

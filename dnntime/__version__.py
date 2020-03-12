@@ -3,8 +3,8 @@
 
 __title__ = "dnntime"
 __author__ = "Kevin R. Chen"
-__description__ = "Deep learning & neural network predictive modeling framework for time-series data."
+__description__ = "An end-to-end, modular deep learning package time-series predictive modeling."
 __url__ = "https://github.com/Kevin-Chen0/deep-time-series.git"
-__version__ = "0.3.7.3"
+__version__ = "0.3.7.4"
 __license__ = "Apache License 2.0"
 __copyright__ = "2020 Kevin R. Chen"

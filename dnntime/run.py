@@ -119,7 +119,14 @@ def run_package(
     # Check the config dict to ensure it passes all of the assertions
     validate_config(config)
     # Initializing meta config variable(s) prior to STEPS
-    ui = config['meta']['user_interface']
+    ui = config['meta_conf']['user_interface']
+    extract = config['extract']
+    preprocess = config['preprocess']
+    analyze = config['analyze']
+    transform = config['transform']
+    supervise = config['supervise']
+    dnn = config['dnn']
+    evaluate = config['evaluate']
     space = "&nbsp" if ui == 'notebook' else " "
     # Store all of the data ETL checkpoints in a dict that will be returned
     data_dict = CheckpointDict('data')
@@ -130,14 +137,14 @@ def run_package(
     print_bold(f"STEP 1) {space}Extract Data from Source", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 1) and beyond
-    extract = config['extract']
-    file_path = extract['file_path']
-    delinator = extract['delineator'] if extract['delineator'] != '' else ','
-    dt_col = extract['datetime_column']  # data column that contains time-series
-    target = extract['target_column']    # data column that contains y-value
-
-    if file_path != '':
+    if extract:
+        # Initializing immutable config variables for STEP 1) and beyond
+        extract_conf = config['extract_conf']
+        file_path = extract_conf['file_path']
+        delinator = extract_conf['delineator'] if extract_conf['delineator'] != '' else ','
+        dt_col = extract_conf['datetime_column']  # data column that contains time-series
+        target = extract_conf['target_column']    # data column that contains y-value
+    
         assert file_path.endswith(
             ".csv"
         ), "Dataset CSV file not found. Please check filepath."
@@ -148,8 +155,8 @@ def run_package(
         print(f"Using inputted DataFrame.")
     else:
         print("Data input not found in either file source or DataFrame.")
-        return
-    
+        return        
+
     data_dict.save(df, 'Original')
 
 
@@ -157,132 +164,142 @@ def run_package(
     print_bold(f"STEP 2) {space}Preprocessing I (Cleaning)", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 2) and beyond
-    preprocess = config['preprocess']
-    univariate = preprocess['univariate']
-    time_interval = preprocess['time_interval']
-    auto_clean = preprocess['auto_clean']
-
-    if univariate:
-        print(f"Set the dataset to univarate using target col of {target}.")
-        df = df[target].to_frame()
-        data_dict.save(df, 'Univarate')
-
-    freq, _ = interval_to_freq(time_interval)
-    print(f"Frequency has been set to {freq}.\n")
-
-    if auto_clean:
-        # Initializing immutable config variables for Auto-Clean specifically
-        conf = preprocess['auto_clean_conf']
-        timezone = conf['timezone']
-        allow_neg = conf['negative_values']
-        fill = conf['nan_fill_type']
-
-        print("Begin initial cleaning of the extract dataset...")
-        df = clean_data(df, target, timezone, freq, allow_neg, fill)
-        data_dict.save(df, 'Clean')
+    if preprocess:
+        # Initializing immutable config variables for STEP 2) and beyond
+        preprocess_conf = config['preprocess_conf']
+        univariate = preprocess_conf['univariate']
+        time_interval = preprocess_conf['time_interval']
+        auto_clean = preprocess_conf['auto_clean']
+    
+        if univariate:
+            print(f"Set the dataset to univarate using target col of {target}.")
+            df = df[target].to_frame()
+            data_dict.save(df, 'Univarate')
+    
+        freq, _ = interval_to_freq(time_interval)
+        print(f"Frequency has been set to {freq}.\n")
+    
+        if auto_clean:
+            # Initializing immutable config variables for Auto-Clean specifically
+            clean_conf = preprocess_conf['auto_clean_conf']
+            timezone = clean_conf['timezone']
+            allow_neg = clean_conf['negative_values']
+            fill = clean_conf['nan_fill_type']
+    
+            print("Begin initial cleaning of the extract dataset...")
+            df = clean_data(df, target, timezone, freq, allow_neg, fill)
+            data_dict.save(df, 'Clean')
+        else:
+            print("Automatic cleaning of data has been skipped.")
     else:
-        print("Automatic cleaning of data has been skipped.")
+        print("Skipping cleaning preprocessing step based on user input.")
 
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 3) {space}EDA I (General)", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 3) and beyond
-    analyze = config['analyze']
-    ci = analyze['confidence_interval']
-    title = analyze['title']
-    x_label = analyze['x_label']
-    y_label = analyze['y_label']
-
-    # Prevent errors
-    pd.plotting.register_matplotlib_converters()
-
-    # Define data with the defined plot labels in the config file
-    print("Plot the entire time-series data:\n")
-    ts_plot(df, dt_col, target,
-            title=title,
-            x_label=x_label,
-            y_label=y_label
-            )
-
+    if analyze:
+        # Initializing immutable config variables for STEP 3) and beyond
+        analyze_conf = config['analyze_conf']
+        ci = analyze_conf['confidence_interval']
+        title = analyze_conf['title']
+        x_label = analyze_conf['x_label']
+        y_label = analyze_conf['y_label']
+    
+        # Prevent errors
+        pd.plotting.register_matplotlib_converters()
+    
+        # Define data with the defined plot labels in the config file
+        print("Plot the entire time-series data:\n")
+        ts_plot(df, dt_col, target,
+                title=title,
+                x_label=x_label,
+                y_label=y_label
+                )
+    else:
+        print("Skipping general EDA step based on user input.")
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 4) {space}EDA II (Time-Series Stats)", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 4) and beyond
-    ci = analyze['confidence_interval']
-
-    print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).", 
-               ui, n_after=1)
-    stationarity = adf_stationary_test(df, 1-ci)
-    if stationarity:
-        print(f"Current data is stationary with {ci*100}% " + \
-              "confidence interval.\n")
+    if analyze:
+        # Initializing immutable config variables for STEP 4) and beyond
+        ci = analyze_conf['confidence_interval']
+    
+        print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).", 
+                   ui, n_after=1)
+        stationarity = adf_stationary_test(df, 1-ci)
+        if stationarity:
+            print(f"Current data is stationary with {ci*100}% " + \
+                  "confidence interval.\n")
+        else:
+            print(f"Current data is non-stationary with {ci*100}% " + \
+                  "confidence interval.\n")
+    
+        print_bold(f"4.2) {space}Printing out ETS decomposition plot.", ui, n_before=1, n_after=1)
+        # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label);
+        # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label,
+        #                        prophet=True);
+        ets = ets_decomposition_plot(df, dt_col, target,
+                                     title=title,
+                                     x_label=x_label,
+                                     y_label=y_label,
+                                     plotly=True);
+    
+        print_bold(f"4.3) {space}Plot out ACF/PACF graph..", ui, n_before=1, n_after=1)
+        title = "Total Electricity Demand"
+        lags_7 = 24*7  # 7-days lag
+        lags_30 = 24*30  # 30-days lag
+        lags_90 = 24*90  # 90-days lag
+        acf_pacf_plot(df, target, title, lags=[lags_7, lags_30])
+    
+        # print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
+        #            n_before=1, n_after=1)
+    
+        # print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
     else:
-        print(f"Current data is non-stationary with {ci*100}% " + \
-              "confidence interval.\n")
-
-    print_bold(f"4.2) {space}Printing out ETS decomposition plot.", ui, n_before=1, n_after=1)
-    # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label);
-    # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label,
-    #                        prophet=True);
-    ets = ets_decomposition_plot(df, dt_col, target,
-                                 title=title,
-                                 x_label=x_label,
-                                 y_label=y_label,
-                                 plotly=True);
-
-    print_bold(f"4.3) {space}Plot out ACF/PACF graph..", ui, n_before=1, n_after=1)
-    title = "Total Electricity Demand"
-    lags_7 = 24*7  # 7-days lag
-    lags_30 = 24*30  # 30-days lag
-    lags_90 = 24*90  # 90-days lag
-    acf_pacf_plot(df, target, title, lags=[lags_7, lags_30])
-
-    # print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
-    #            n_before=1, n_after=1)
-
-    # print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
-
+        print("Skipping statistical time-series EDA step based on user input.")
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 5) {space}Preprocessing II (Transformations)", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 5) and beyond
-    transform = config['transform']
-    trans_steps = transform['steps']
-    decom_model = transform['decomposition_model']
-    standardize = transform['standardize']
-
-    substep = 1
-
-    for step in trans_steps:
-        standardize_note = ''
-        if step in ['box-cox', 'yeo-johnson', 'log']:
-            # Performs log or power transform and then normalize in one function
-            info = f"5.{substep}) Performed"
-            if step in ['box-cox', 'yeo-johnson']:
-                info += f" power transformation using {step.title()} method."
-            else:
-                info += " log transformation."
-            if standardize:
-                info += " Then standardized data."
-                standardize_note = ' Standardized'
-            df, trans_type = log_power_transform(df, target, method=step,
-                                                 standardize=standardize)
-        elif step in ['detrend', 'deseasonalize', 'residual-only']:
-            info = f"5.{substep}) Performed the following adjustment: {step.title()}." 
-            df, decom_type = decompose(df, target, decom_type=step, decom_model=decom_model)
-
-        print_bold(f"{info}", ui)
-        data_dict.save(df, step.title()+standardize_note) 
-        substep += 1
-        print()
-
+    if transform:
+        # Initializing immutable config variables for STEP 5) and beyond
+        transform_conf = config['transform_conf']
+        trans_steps = transform_conf['steps']
+        decom_model = transform_conf['decomposition_model']
+        standardize = transform_conf['standardize']
+    
+        substep = 1
+    
+        for step in trans_steps:
+            standardize_note = ''
+            if step in ['box-cox', 'yeo-johnson', 'log']:
+                # Performs log or power transform and then normalize in one function
+                info = f"5.{substep}) Performed"
+                if step in ['box-cox', 'yeo-johnson']:
+                    info += f" power transformation using {step.title()} method."
+                else:
+                    info += " log transformation."
+                if standardize:
+                    info += " Then standardized data."
+                    standardize_note = ' Standardized'
+                df, trans_type = log_power_transform(df, target, method=step,
+                                                     standardize=standardize)
+            elif step in ['detrend', 'deseasonalize', 'residual-only']:
+                info = f"5.{substep}) Performed the following adjustment: {step.title()}." 
+                df, decom_type = decompose(df, target, decom_type=step, decom_model=decom_model)
+    
+            print_bold(f"{info}", ui)
+            data_dict.save(df, step.title()+standardize_note) 
+            substep += 1
+            print()
+    else:
+        print("Skipping transformation preprocessing step based on user input.")
+        
     ##################################################################################################
     ### Transform dataset into supervised ML problem with walk-forward validation.
     ### Shifting time-steps
@@ -291,86 +308,88 @@ def run_package(
     print_bold(f"STEP 6) {space}Preprocessing III (Make Supervised)", ui)
     print("-------------------------------------------------------------------\n")
 
-    # Initializing immutable config variables for STEP 6) and beyond
-    supervise = config['supervise']
-    train_period = supervise['training_period']
-    fcast_period = supervise['forecast_period']
-    val_set = supervise['validation_set']
-    test_set = supervise['test_set']
-    max_gap = supervise['max_gap']
-
-    # Converting all 'str' periods into #timesteps based of the stated 'freq'
-    n_input = interval_to_timesteps(train_period, freq)  # num input timesteps
-    n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
-    n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
-    n_test = interval_to_timesteps(test_set, freq)  # test dataset size
-    print("Performing walk-forward validation.")
-
-    orig, train, val, test = split_data(df,
-                                        n_test=n_test,  # size of test set
-                                        n_val=n_val,  # size of validation set
-                                        n_input=n_input,   # input timestep seq
-                                        n_output=n_output, # output timestep seq
-                                        g_min=0,     # min gap ratio
-                                        g_max=max_gap)  # max gap ratio
-
-    X, y, t = orig  # original data tuple in supervised format
-    X_train, y_train, t_train = train
-    X_val, y_val, t_val = val
-    X_test, y_test, t_test = test
-
-    print("Converted time-series into supervised leraning problem using walk-forward validation:")
-    print(f"    Time-series frequency: '{freq}'.")
-    print(f"    Input period: {X.shape[1]} timesteps, or 'bikweek'.")
-    print(f"    Output (forecast) period: {y.shape[1]} timesteps, or 'day'.")
-    print(f"    Original dataset: {df.shape[0]} observations.")
-    print(f"    Supervised dataset: {X.shape[0]} observations.")
-    print(f"    Training dataset: {X_train.shape[0]} observations.")
-    print(f"    Validation dataset: {X_val.shape[0]} observations, or '{val_set}'.")
-    print(f"    Testing dataset: {X_test.shape[0]} observations, or '{test_set}'.")
-
-    train_prct = len(X_train)/len(X)*100
-    val_prct = len(X_val)/len(X)*100
-    test_prct = len(X_test)/len(X)*100
-    gap_prct = 100 - train_prct - val_prct - test_prct
-    print("\nSplit %:")
-    print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: " + \
-          f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
-
-    print("\nDataset shapes:")
-    print(f"    Original:")
-    print(f"        data shape = {df.shape}")
-    print(f"    Supervised:")
-    print(f"        X.shape = {X.shape}")
-    print(f"        y.shape = {y.shape}")
-    print(f"        t.shape = {t.shape}")
-    print(f"    Training:")
-    print(f"        X_train.shape = {X_train.shape}")
-    print(f"        y_train.shape = {y_train.shape}")
-    print(f"        t_train.shape = {t_train.shape}")
-    print(f"    Validation:")
-    print(f"        X_val.shape = {X_val.shape}")
-    print(f"        y_val.shape = {y_val.shape}")
-    print(f"        t_val.shape = {t_val.shape}")
-    print(f"    Testing:")
-    print(f"        X_test.shape = {X_test.shape}")
-    print(f"        y_test.shape = {y_test.shape}")
-    print(f"        t_test.shape = {t_test.shape}")
-
-    data = {
-        'X_train': X_train,
-        'y_train': y_train,
-        't_train': t_train,
-        'X_val': X_val,
-        'y_val': y_val,
-        't_val': t_val,
-        'X_test': X_test,
-        'y_test': y_test,
-        't_test': t_test
-    }
-
-    data_dict.save(data, 'Make Supervised')
-
+    if supervise:
+        # Initializing immutable config variables for STEP 6) and beyond
+        supervise_conf = config['supervise_conf']
+        train_period = supervise_conf['training_period']
+        fcast_period = supervise_conf['forecast_period']
+        val_set = supervise_conf['validation_set']
+        test_set = supervise_conf['test_set']
+        max_gap = supervise_conf['max_gap']
+    
+        # Converting all 'str' periods into #timesteps based of the stated 'freq'
+        n_input = interval_to_timesteps(train_period, freq)  # num input timesteps
+        n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
+        n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
+        n_test = interval_to_timesteps(test_set, freq)  # test dataset size
+        print("Performing walk-forward validation.")
+    
+        orig, train, val, test = split_data(df,
+                                            n_test=n_test,  # size of test set
+                                            n_val=n_val,  # size of validation set
+                                            n_input=n_input,   # input timestep seq
+                                            n_output=n_output, # output timestep seq
+                                            g_min=0,     # min gap ratio
+                                            g_max=max_gap)  # max gap ratio
+    
+        X, y, t = orig  # original data tuple in supervised format
+        X_train, y_train, t_train = train
+        X_val, y_val, t_val = val
+        X_test, y_test, t_test = test
+    
+        print("Converted time-series into supervised leraning problem using walk-forward validation:")
+        print(f"    Time-series frequency: '{freq}'.")
+        print(f"    Input period: {X.shape[1]} timesteps, or 'bikweek'.")
+        print(f"    Output (forecast) period: {y.shape[1]} timesteps, or 'day'.")
+        print(f"    Original dataset: {df.shape[0]} observations.")
+        print(f"    Supervised dataset: {X.shape[0]} observations.")
+        print(f"    Training dataset: {X_train.shape[0]} observations.")
+        print(f"    Validation dataset: {X_val.shape[0]} observations, or '{val_set}'.")
+        print(f"    Testing dataset: {X_test.shape[0]} observations, or '{test_set}'.")
+    
+        train_prct = len(X_train)/len(X)*100
+        val_prct = len(X_val)/len(X)*100
+        test_prct = len(X_test)/len(X)*100
+        gap_prct = 100 - train_prct - val_prct - test_prct
+        print("\nSplit %:")
+        print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: " + \
+              f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
+    
+        print("\nDataset shapes:")
+        print(f"    Original:")
+        print(f"        data shape = {df.shape}")
+        print(f"    Supervised:")
+        print(f"        X.shape = {X.shape}")
+        print(f"        y.shape = {y.shape}")
+        print(f"        t.shape = {t.shape}")
+        print(f"    Training:")
+        print(f"        X_train.shape = {X_train.shape}")
+        print(f"        y_train.shape = {y_train.shape}")
+        print(f"        t_train.shape = {t_train.shape}")
+        print(f"    Validation:")
+        print(f"        X_val.shape = {X_val.shape}")
+        print(f"        y_val.shape = {y_val.shape}")
+        print(f"        t_val.shape = {t_val.shape}")
+        print(f"    Testing:")
+        print(f"        X_test.shape = {X_test.shape}")
+        print(f"        y_test.shape = {y_test.shape}")
+        print(f"        t_test.shape = {t_test.shape}")
+    
+        data = {
+            'X_train': X_train,
+            'y_train': y_train,
+            't_train': t_train,
+            'X_val': X_val,
+            'y_val': y_val,
+            't_val': t_val,
+            'X_test': X_test,
+            'y_test': y_test,
+            't_test': t_test
+        }
+    
+        data_dict.save(data, 'Make Supervised')
+    else:
+        print("Skipping supervised preprocessing step based on user input.")
 
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 7) {space}Model Search (NNs)", ui)
@@ -382,19 +401,19 @@ def run_package(
         print("Running on CPU as GPU is not enabled.")
 
     # Initializing immutable config variables for STEP 7) and beyond
-    dnn = config['dnn']
-    model_type = dnn['model_type']
-    n_epoch = dnn['epochs']
-    n_batch = dnn['batch_size']
-    n_features = 1 if univariate else dnn['n_features']  # number of features
-    n_units = dnn['n_units']  # number of units per layer
-    d_rate = dnn['d_rate']  # dropout rate
-    opt = dnn['optimizer']
-    loss = dnn['objective_function']
-    verbose = dnn['verbose']
+    dnn_conf = config['dnn_conf']
+    model_type = dnn_conf['model_type']
+    n_epoch = dnn_conf['epochs']
+    n_batch = dnn_conf['batch_size']
+    n_features = 1 if univariate else dnn_conf['n_features']  # number of features
+    n_units = dnn_conf['n_units']  # number of units per layer
+    d_rate = dnn_conf['d_rate']  # dropout rate
+    opt = dnn_conf['optimizer']
+    loss = dnn_conf['objective_function']
+    verbose = dnn_conf['verbose']
 
-    evaluate = config['evaluate']
-    score_type = evaluate['score_type']
+    evaluate_conf = config['evaluate_conf']
+    score_type = evaluate_conf['score_type']
 
     # Store all of the data ETL checkpoints in a dict that will be returned
     model_dict = CheckpointDict('model')
