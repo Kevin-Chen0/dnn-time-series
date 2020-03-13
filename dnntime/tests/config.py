@@ -113,11 +113,11 @@ def validate_config(config: pd.DataFrame) -> None:
                 clean['nan_fill_type'], str
             ), "'nan_fill_type' value must be a str type."
             valid_fills = [
-                'linear', 'time', 'index', 'pad', 'nearest', 'zero', 'slinear',
+                '', 'linear', 'time', 'index', 'pad', 'nearest', 'zero', 'slinear',
                 'quadratic', 'cubic', 'krogh', 'pchip', 'akima', 'from_derivatives'
             ]
             assert len(set([clean['nan_fill_type']]) - set(valid_fills)) == 0, \
-                   f"{path}'nan_fill_type' value must be within DataFrame.interpolate: " + \
+                   f"{path}'nan_fill_type' value must be '' or within DataFrame.interpolate: " + \
                    "https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html"
             # Validate variable <output_type>
             assert (
@@ -278,20 +278,20 @@ def validate_config(config: pd.DataFrame) -> None:
         assert isinstance(
             dnn['batch_size'], int
         ), "'batch_size' value must be an int type."
-        # Validate <n_units>
+        # Validate <n_unit>
         assert (
-            'n_units' in dnn.keys()
-        ), f"{path}'n_units' key is not found in the config file."
+            'number_units' in dnn.keys()
+        ), f"{path}'number_units' key is not found in the config file."
         assert isinstance(
-            dnn['n_units'], int
-        ), "'n_units' value must be an int type."
+            dnn['number_units'], int
+        ), "'number_units' value must be an int type."
         # Validate <d_rate>
         assert (
-            'd_rate' in dnn.keys()
-        ), f"{path}'d_rate' key is not found in the config file."
+            'dropout_rate' in dnn.keys()
+        ), f"{path}'dropout_rate' key is not found in the config file."
         assert isinstance(
-            dnn['d_rate'], float
-        ), "'d_rate' value must be an float type."
+            dnn['dropout_rate'], float
+        ), "'dropout_rate' value must be an float type."
         # Validate variable <opt>
         assert (
             'optimizer' in dnn.keys()

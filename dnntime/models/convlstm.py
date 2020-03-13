@@ -1,4 +1,3 @@
-import ipdb
 import time
 import numpy as np
 from typing import Tuple
@@ -12,16 +11,16 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 class ConvLSTMWrapper:
 
     def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1, 
-                 n_col: int = 1, n_features: int = 1, n_units: int = 64,
+                 n_col: int = 1, n_feature: int = 1, n_unit: int = 64,
                  d_rate: int = 0.15, optimizer: str = 'adam', loss: str = "mse"):
-        
-        self.conv_model = StackedConvLSTM(n_steps, n_row, n_col, n_units,
-                                          n_features, d_rate)
+
+        self.conv_model = StackedConvLSTM(n_steps, n_row, n_col, n_unit,
+                                          n_feature, d_rate)
         self.conv_model.compile(optimizer, loss)
         self.l_subseq = l_subseq
         self.n_row = n_row
         self.n_col = n_col
-        self.n_features = n_features
+        self.n_feature = n_feature
         self.run_time = 0.0
 
     def reshape(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -31,21 +30,21 @@ class ConvLSTMWrapper:
 
         Parameters
         ----------
-        X : [samples, n_input, n_features]
+        X : [samples, n_input, n_feature]
         y : [samples, n_output]
 
         Returns
         -------
-        X : [samples, n_input/length_subsequence, n_row, n_col, n_features] or
+        X : [samples, n_input/length_subsequence, n_row, n_col, n_feature] or
             [samples, subseq, rows, cols, channel]
         y : [samples, n_output, features]
             [samples, target, channel]
 
         """
         X = X.reshape((X.shape[0], int(X.shape[1]/self.l_subseq),
-                       self.n_row, self.n_col, self.n_features
+                       self.n_row, self.n_col, self.n_feature
                        ))
-        y = y.reshape((y.shape[0], self.n_col, self.n_features))
+        y = y.reshape((y.shape[0], self.n_col, 1))
 
         return X, y
 
@@ -77,32 +76,32 @@ class ConvLSTMWrapper:
         print(f"MAPE Score: {round(mape, 4)}")
         print(f"RMSE Score: {round(rmse, 4)}")
         print(f"Total Training Time: {round(self.run_time/60, 2)} min")
-    
+
         return self.conv_model, conv_pred, rmse
 
 
-def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_units: int, 
-                    n_features: int, d_rate: float = 0.5) -> Sequential:
+def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int, 
+                    n_feature: int, d_rate: float = 0.5) -> Sequential:
 
     model = Sequential()
     # define encoder
-    model.add(ConvLSTM2D(64, (1,3), activation='relu', \
-                         input_shape=(n_steps, n_row, n_col, n_features)))
+    model.add(ConvLSTM2D(n_unit, (1,3), activation='relu', \
+                         input_shape=(n_steps, n_row, n_col, n_feature)))
     model.add(Flatten())
     # repeat encoding
     model.add(RepeatVector(n_col))
     # define decoder
-    model.add(LSTM(n_units, activation='relu', return_sequences=True))
+    model.add(LSTM(n_unit, activation='relu', return_sequences=True))
     # define output model
-    model.add(TimeDistributed(Dense(n_units, activation='relu')))
+    model.add(TimeDistributed(Dense(n_unit, activation='relu')))
     model.add(TimeDistributed(Dropout(d_rate)))
-    model.add(TimeDistributed(Dense(n_features)))  # 1 unit if univariate time-series
+    model.add(TimeDistributed(Dense(1)))
     print("Stacked ConvLSTM model summary:")
     model.summary()
     return model
 
 
-def CustomConvLSTM(n_input: int, n_output: int, n_units: int,
-                   n_features: int) -> Sequential:
+def CustomConvLSTM(n_input: int, n_output: int, n_unit: int,
+                   n_feature: int) -> Sequential:
 
     pass

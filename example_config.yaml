@@ -8,10 +8,10 @@ preprocess:
     univariate: True
     time_interval: 'hourly'
     auto_clean:  # this entire block can be omitted if 'auto_clean' is not needed
-        timezone: 'Europe/Amsterdam'
-        allow_negatives: False  # set to Fase if negative values are prohibited, hence set to NaN
+        timezone: 'Europe/Madrid'
+        allow_negatives: True  # set to Fase if negative values are prohibited, hence set to NaN
         all_numeric: True  # convert entire DataFrame into float64 (if not already done so)
-        nan_fill_type: 'linear'  # see: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html
+        nan_fill_type: 'linear'  # leave '' to not fill, see: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html
         output_type: 'reg'  # regression 'reg' or classication 'class'
 analyze:
     title: 'PJME Regional Power Demand Time-Series'
@@ -19,7 +19,7 @@ analyze:
     y_label: 'Total Demand (MW)'
     confidence_interval: 0.95
 transform:
-    steps: ['box-cox', 'deseasonalize']
+    steps: ['box-cox', 'deseasonalize']  # 'box-cox', 'yeo-johnson', 'deseasonalize'
     decomposition_model: 'additive'
     standardize: True
 supervise:
@@ -29,11 +29,11 @@ supervise:
     test_set: 'month'  # size of the test set, taken from the last <input> of dataset
     max_gap: 0.01
 dnn:
-    model_type: 'convlstm'
+    model_type: 'all'
     epochs: 2
     batch_size: 512
-    n_units: 128   # number of units per layer
-    d_rate: 0.15   # dropout rate
+    number_units: 128   # number of units per layer
+    dropout_rate: 0.15   # dropout rate
     optimizer: 'adam'
     objective_function: 'mse'  # the loss value minimized by the dnn model
     verbose: 1     # description for model 'fit' and 'evaluate'

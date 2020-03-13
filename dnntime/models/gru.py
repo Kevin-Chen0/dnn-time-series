@@ -1,4 +1,3 @@
-import ipdb
 import time
 import numpy as np
 from typing import Tuple
@@ -10,11 +9,11 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 class GRUWrapper:
 
-    def __init__(self, n_input: int, n_output: int = 1, n_features: int = 1, 
-                 n_units: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
+    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1, 
+                 n_unit: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
                  loss: str = "mse"):
         
-        self.gru_model = StackedGRU(n_input, n_output, n_units, n_features, d_rate)
+        self.gru_model = StackedGRU(n_input, n_output, n_unit, n_feature, d_rate)
         self.gru_model.compile(optimizer, loss)
         self.run_time = 0.0
 
@@ -47,26 +46,26 @@ class GRUWrapper:
         return self.gru_model, gru_pred, rmse
 
 
-def VanillaGRU(n_input: int, n_output: int, n_units: int, n_features: int) -> Sequential:
+def VanillaGRU(n_input: int, n_output: int, n_unit: int, n_feature: int) -> Sequential:
 
     model = Sequential()
-    model.add(GRU(n_units, activation="tanh", return_sequences=False,
-                  input_shape=(n_input, n_features)))
+    model.add(GRU(n_unit, activation="tanh", return_sequences=False,
+                  input_shape=(n_input, n_feature)))
     model.add(Dense(n_output))
     print("Vanilla GRU model summary:")
     model.summary()
     return model
 
 
-def StackedGRU(n_input, n_output, n_units, n_features, d_rate=0.5):
+def StackedGRU(n_input, n_output, n_unit, n_feature, d_rate=0.5):
 
     model = Sequential()
-    model.add(GRU(n_units, activation="tanh", return_sequences=True,
-                  input_shape=(n_input, n_features)))
+    model.add(GRU(n_unit, activation="tanh", return_sequences=True,
+                  input_shape=(n_input, n_feature)))
     model.add(Dropout(d_rate))
-    model.add(GRU(n_units, activation="tanh", return_sequences=True))
+    model.add(GRU(n_unit, activation="tanh", return_sequences=True))
     model.add(Dropout(d_rate))
-    model.add(GRU(n_units, activation="tanh", return_sequences=False))
+    model.add(GRU(n_unit, activation="tanh", return_sequences=False))
     model.add(Dropout(d_rate))
     model.add(Dense(n_output))
     print("Stacked GRU model summary:")
@@ -74,7 +73,7 @@ def StackedGRU(n_input, n_output, n_units, n_features, d_rate=0.5):
     return model
 
 
-def CustomGRU(n_input: int, n_output: int, n_units: int,
-              n_features: int) -> Sequential:
+def CustomGRU(n_input: int, n_output: int, n_unit: int,
+              n_feature: int) -> Sequential:
 
     pass

@@ -1,4 +1,3 @@
-import ipdb
 import time
 import numpy as np
 from typing import Tuple
@@ -10,11 +9,11 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 class LSTMWrapper:
 
-    def __init__(self, n_input: int, n_output: int = 1, n_features: int = 1, 
-                 n_units: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
+    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1, 
+                 n_unit: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
                  loss: str = "mse"):
         
-        self.lstm_model = StackedLSTM(n_input, n_output, n_units, n_features, d_rate)
+        self.lstm_model = StackedLSTM(n_input, n_output, n_unit, n_feature, d_rate)
         self.lstm_model.compile(optimizer, loss)
         self.run_time = 0.0
 
@@ -47,27 +46,27 @@ class LSTMWrapper:
         return self.lstm_model, lstm_pred, rmse
 
 
-def VanillaLSTM(n_input: int, n_output: int, n_units: int, n_features: int) -> Sequential:
+def VanillaLSTM(n_input: int, n_output: int, n_unit: int, n_feature: int) -> Sequential:
 
     model = Sequential()
-    model.add(LSTM(n_units, activation="tanh", return_sequences=False,
-                   input_shape=(n_input, n_features)))
+    model.add(LSTM(n_unit, activation="tanh", return_sequences=False,
+                   input_shape=(n_input, n_feature)))
     model.add(Dense(n_output))
     print("Vanilla LSTM model summary:")
     model.summary()
     return model
 
 
-def StackedLSTM(n_input: int, n_output: int, n_units: int, n_features: int,
+def StackedLSTM(n_input: int, n_output: int, n_unit: int, n_feature: int,
                 d_rate: float = 0.5) -> Sequential:
 
     model = Sequential()
-    model.add(LSTM(n_units, activation="tanh", return_sequences=True,
-                   input_shape=(n_input, n_features)))
+    model.add(LSTM(n_unit, activation="tanh", return_sequences=True,
+                   input_shape=(n_input, n_feature)))
     model.add(Dropout(d_rate))
-    model.add(LSTM(n_units, activation="tanh", return_sequences=True))
+    model.add(LSTM(n_unit, activation="tanh", return_sequences=True))
     model.add(Dropout(d_rate))
-    model.add(LSTM(n_units, activation="tanh", return_sequences=False))
+    model.add(LSTM(n_unit, activation="tanh", return_sequences=False))
     model.add(Dropout(d_rate))
     model.add(Dense(n_output))
     print("Stacked LSTM model summary:")
@@ -75,7 +74,7 @@ def StackedLSTM(n_input: int, n_output: int, n_units: int, n_features: int,
     return model
 
 
-def CustomLSTM(n_input: int, n_output: int, n_units: int,
-               n_features: int) -> Sequential:
+def CustomLSTM(n_input: int, n_output: int, n_unit: int,
+               n_feature: int) -> Sequential:
 
     pass

@@ -1,7 +1,4 @@
-import glob
-import importlib
 import os
-import re
 from setuptools import setup, find_packages
 
 PACKAGE_NAME = "dnntime"
@@ -39,7 +36,6 @@ setup(
         'art >= 4.5',
         'fbprophet >= 0.5',
         'tensorflow >= 2.1.0',
-        'ipdb >= 0.13.0',
     ],
     classifiers=[
         'Intended Audience :: Developers',

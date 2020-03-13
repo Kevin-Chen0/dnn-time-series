@@ -1,10 +1,8 @@
-import ipdb
 import numpy as np
 import pandas as pd
 from random import randint
 import datetime
 import pytz
-import copy
 from typing import Union, Tuple
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, power_transform
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -83,13 +81,23 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
         print(f"    - Converted target={target} col to float64 type.")
     # 5) Replace any negative number as NaN if target negative numbers are not allowed
     if not allow_neg:
-        dtc[target][dtc[target] < 0] = np.NaN
+        dtc[dtc < 0] = np.NaN
         print(f"    - Since negative values are unpermitted, all negative " 
               "values found in dataset are converted to NaN.")
     # 6) Fill the missing targetvalues via given interpolation in-place
-    if dtc[target].isnull().sum() > 0:
-        dtc[target].interpolate(fill, inplace=True)
+    if fill != '' and dtc.isnull().sum().sum() > 0:
+        dtc.interpolate(fill, inplace=True)
         print(f"    - filled any NaN value via {fill} interpolation.")
+    # 7) Drop all columns that still have NaN values (as all their values are NaNs)
+    before_cols = set(dtc.columns.tolist())
+    dtc.dropna(axis=1, how='all', inplace=True)
+    after_cols = set(dtc.columns.tolist())
+    if len(before_cols-after_cols) > 0:
+        print("    - The following columns have all NaN values: "
+              f"{list(before_cols-after_cols)}. They are therefore dropped.")
+    # 8) Double-check whether there are still any missing NaN in the dataset
+    if dtc.isnull().sum().sum() > 0:
+        print(f"    - WARNING: Missing values still exist in the dataset.")
 
     return dtc
 
@@ -105,7 +113,7 @@ def normalize(df: pd.DataFrame, target: str, scale: str = 'minmax'
     return df_norm, scaler
 
 
-def log_power_transform(df: pd.DataFrame, target: str, method: str = 'box-cox',
+def log_power_transform(df: pd.DataFrame, method: str = 'box-cox',
                         standardize: bool = True) -> Tuple[pd.DataFrame, str]:
     stan = ''
     if standardize:
@@ -113,14 +121,15 @@ def log_power_transform(df: pd.DataFrame, target: str, method: str = 'box-cox',
     if method == 'log':
         return df.transform(np.log), str(method.title() + ' ' + stan)
     else:
-        df_pwr = df.copy()
-        df_pwr[target] = power_transform(df, method=method, standardize=standardize)
+        data_pwr = power_transform(df, method=method, standardize=standardize)
+        df_pwr = pd.DataFrame(data_pwr, index=df.index, columns=df.columns)
         return df_pwr, str(method.title() + ' ' + stan)
 
 
 def decompose(df: pd.DataFrame, target: str, decom_type: str = 'deseasonalize',
               decom_model: str = 'additive') -> Tuple[pd.DataFrame, np.ndarray]:
-    ets = seasonal_decompose(df[target], decom_model)
+    ets = seasonal_decompose(df, decom_model)
+    # ets = seasonal_decompose(df[target], decom_model)
     ets_idx = ets.trend[ets.resid.notnull()].index
     if decom_type == 'deseasonalize' and decom_model == 'additive':
         trans = ets.trend[ets_idx] + ets.resid[ets_idx]
@@ -144,12 +153,13 @@ def decompose(df: pd.DataFrame, target: str, decom_type: str = 'deseasonalize',
     return df_trans, removed
 
 
-def split_data(data: pd.DataFrame, n_test: int, n_val: int, n_input: int,
-               n_output: int = 1, g_min: int = 0, g_max: int = 0
+def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input: int,
+               n_output: int = 1, n_feature: int = 1, g_min: int = 0, g_max: int = 0
                ) -> Union[Tuple[Tuple, Tuple, Tuple], Tuple[Tuple, Tuple, Tuple, Tuple]]:
-    X, y, t = make_supervised(data, n_input, n_output)
+    
+    X, y, t = make_supervised(data, target, n_input, n_output, n_feature)
     gap = randint(int(g_min*len(X)), int(g_max*len(X)))
-    # ipdb.set_trace()
+
     X_train0, X_test, y_train0, y_test = gap_train_test_split(X, y, test_size=n_test, \
                                                               gap_size=gap)
     _, _, t_train0, t_test = gap_train_test_split(X, t, test_size=n_test, \
@@ -174,8 +184,8 @@ def split_data(data: pd.DataFrame, n_test: int, n_val: int, n_input: int,
 
 
 # Credit: Machine Learning Mastery (Deep Learning in Time-Series Forecasting)
-def make_supervised(data: pd.DataFrame, n_input: int, n_output: int
-                    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def make_supervised(data: pd.DataFrame, target: str, n_input: int, n_output: int,
+                    n_feature: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     # flatten data
     # data = train.reshape((train.shape[0]*train.shape[1], train.shape[2]))
     X, y, t = list(), list(), list()
@@ -188,9 +198,9 @@ def make_supervised(data: pd.DataFrame, n_input: int, n_output: int
         # ensure we have enough data for this instance
         if out_end <= len(data):
             x_input = data[in_start:in_end].to_numpy()
-            x_input = x_input.reshape((len(x_input), 1))
+            x_input = x_input.reshape((len(x_input), n_feature))
             X.append(x_input)
-            y_output = data[in_end:out_end].to_numpy()
+            y_output = data[target][in_end:out_end].to_numpy()
             y_output = y_output.reshape(y_output.shape[0])
             y.append(y_output)
             t_index = data.index[in_end].to_numpy()

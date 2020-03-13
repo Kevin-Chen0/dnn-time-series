@@ -1,15 +1,11 @@
-import ipdb
-import numpy as np
 import pandas as pd
-import matplotlib.dates as mdates
-from itertools import cycle
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 sns.set(style="white", color_codes=True)
 # Add commas to y-axis tick values for graphs
 formatter = ticker.StrMethodFormatter('{x:,.0f}')
-from typing import Union, List, Set, Tuple
+from typing import List, Set, Tuple
 # TSA from Statsmodels
 from statsmodels.tsa.api import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose

@@ -5,9 +5,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import yaml
-import ipdb
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, Optional, Set, Tuple, cast
+from typing import Any, DefaultDict, Dict, Tuple
 import operator
 import time
 import art
@@ -26,7 +25,6 @@ from .models import (
 from .tests import validate_config
 # Utils
 from .utils.etl import load_data, clean_data
-# time_series_plot, print_static_rmse, print_dynamic_rmse
 from .utils.etl import log_power_transform, decompose, split_data
 from .utils.ts import interval_to_freq, interval_to_timesteps
 from .utils.eda import ts_plot, ets_decomposition_plot, acf_pacf_plot, \
@@ -123,8 +121,6 @@ def run_package(
         ui = config['meta']['user_interface']
     except KeyError:
         ui = 'console'
-        # print("'meta' section is omitted in config, therefore set UI as "
-        #       "'console' by default.")
     space = "&nbsp" if ui == 'notebook' else " "
     # Store all of the data ETL checkpoints in a dict that will be returned
     data_dict = CheckpointDict('data')
@@ -146,7 +142,7 @@ def run_package(
         assert file_path.endswith(
             ".csv"
         ), "Dataset CSV file not found. Please check filepath."
-        # print(f"Extracting data from file source: '{FILE_PATH}'.")
+
         df = load_data(file_path, dt_col, delinator)
 
     except KeyError:
@@ -253,14 +249,14 @@ def run_package(
                                      x_label=x_label,
                                      y_label=y_label,
                                      plotly=True);
-    
+
         print_bold(f"4.3) {space}Plot out ACF/PACF graph..", ui, n_before=1, n_after=1)
         title = "Total Electricity Demand"
         lags_7 = 24*7  # 7-days lag
         lags_30 = 24*30  # 30-days lag
-        lags_90 = 24*90  # 90-days lag
+        # lags_90 = 24*90  # 90-days lag
         acf_pacf_plot(df, target, title, lags=[lags_7, lags_30])
-    
+
         # print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
         #            n_before=1, n_after=1)
     
@@ -279,7 +275,7 @@ def run_package(
         trans_steps = transform['steps']
         decom_model = transform['decomposition_model']
         standardize = transform['standardize']
-    
+
         substep = 1
 
         for step in trans_steps:
@@ -294,12 +290,12 @@ def run_package(
                 if standardize:
                     info += " Then standardized data."
                     standardize_note = ' Standardized'
-                df, trans_type = log_power_transform(df, target, method=step,
+                df, trans_type = log_power_transform(df, method=step,
                                                      standardize=standardize)
             elif step in ['detrend', 'deseasonalize', 'residual-only']:
                 info = f"5.{substep}) Performed the following adjustment: {step.title()}." 
                 df, decom_type = decompose(df, target, decom_type=step, decom_model=decom_model)
-    
+
             print_bold(f"{info}", ui)
             data_dict.save(df, step.title()+standardize_note) 
             substep += 1
@@ -331,16 +327,18 @@ def run_package(
         n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
         n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
         n_test = interval_to_timesteps(test_set, freq)  # test dataset size
+        n_feature = 1 if univariate else len(df.columns)  # number of feature(s)
         print("Performing walk-forward validation.")
 
-        orig, train, val, test = split_data(df,
+        orig, train, val, test = split_data(df, target,
                                             n_test=n_test,  # size of test set
                                             n_val=n_val,  # size of validation set
                                             n_input=n_input,   # input timestep seq
                                             n_output=n_output, # output timestep seq
+                                            n_feature=n_feature,
                                             g_min=0,     # min gap ratio
                                             g_max=max_gap)  # max gap ratio
-    
+
         X, y, t = orig  # original data tuple in supervised format
         X_train, y_train, t_train = train
         X_val, y_val, t_val = val
@@ -412,9 +410,8 @@ def run_package(
         model_type = dnn['model_type']
         n_epoch = dnn['epochs']
         n_batch = dnn['batch_size']
-        n_features = 1 if univariate else dnn['n_features']  # number of features
-        n_units = dnn['n_units']  # number of units per layer
-        d_rate = dnn['d_rate']  # dropout rate
+        n_unit = dnn['number_units']  # number of units per layer
+        d_rate = dnn['dropout_rate']  # dropout rate
         opt = dnn['optimizer']
         loss = dnn['objective_function']
         verbose = dnn['verbose']
@@ -434,7 +431,7 @@ def run_package(
         if model_type.lower() in ['rnn', 'all']:
             name = 'RNN'
             print_bold(f"7.1) {space}Running a RNN Model...", ui, n_before=1, n_after=1)
-            rnn = RNNWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            rnn = RNNWrapper(n_input, n_output, n_feature, n_unit, d_rate, opt, loss)
             rnn.fit(X_train, y_train, n_epoch, n_batch, verbose)
             model, pred, score = rnn.evaluate(X_test, y_test, score_type)
             model_store = {
@@ -447,7 +444,7 @@ def run_package(
         if model_type.lower() in ['lstm', 'all']:
             name = 'LSTM'
             print_bold(f"7.2) {space}Running a LSTM Model...", ui, n_before=1, n_after=1)
-            lstm = LSTMWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            lstm = LSTMWrapper(n_input, n_output, n_feature, n_unit, d_rate, opt, loss)
             lstm.fit(X_train, y_train, n_epoch, n_batch, verbose)
             model, pred, score = lstm.evaluate(X_test, y_test, score_type)
             model_store = {
@@ -460,7 +457,7 @@ def run_package(
         if model_type.lower() in ['gru', 'all']:
             name = 'GRU'
             print_bold(f"7.3) {space}Running a GRU Model...", ui, n_before=1, n_after=1)
-            gru = GRUWrapper(n_input, n_output, n_features, n_units, d_rate, opt, loss)
+            gru = GRUWrapper(n_input, n_output, n_feature, n_unit, d_rate, opt, loss)
             gru.fit(X_train, y_train, n_epoch, n_batch, verbose)
             model, pred, score = gru.evaluate(X_test, y_test, score_type)
             model_store = {
@@ -477,7 +474,7 @@ def run_package(
                                    l_subseq=n_output, # len of subsequence
                                    n_row=1,  # len of "image" row, can be left as 1
                                    n_col=n_output,    # len of "image" col
-                                   n_features=n_features, n_units=n_units,
+                                   n_feature=n_feature, n_unit=n_unit,
                                    d_rate=d_rate, optimizer=opt, loss=loss
                                    )
             conv.fit(X_train, y_train, n_epoch, n_batch, verbose)
