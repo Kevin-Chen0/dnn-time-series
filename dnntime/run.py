@@ -6,13 +6,14 @@ warnings.filterwarnings("ignore")
 
 import yaml
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, Tuple
+from typing import DefaultDict, Dict, Tuple, Union
 import operator
 import time
 import art
 import tensorflow as tf
+from tensorflow import keras
 
-################################################
+#################################################
 
 # Models
 from .models import (
@@ -26,7 +27,7 @@ from .tests import validate_config
 # Utils
 from .utils.etl import load_data, clean_data
 from .utils.etl import log_power_transform, decompose, split_data
-from .utils.ts import interval_to_freq, interval_to_timesteps
+from .utils.ts import interval_to_freq, period_to_timesteps
 from .utils.eda import ts_plot, ets_decomposition_plot, acf_pacf_plot, \
                        adf_stationary_test
 
@@ -34,6 +35,16 @@ from .utils.eda import ts_plot, ets_decomposition_plot, acf_pacf_plot, \
 class CheckpointDict:
 
     def __init__(self, cp_type: str):
+        """
+        CheckpointDict is a custom class that stores all of the checkpoints or
+        snapshots of either the data or models. Its internal defaultdict is returned
+        in the run_package() function to be used for later analyses or debugging.
+
+        Parameters
+        ----------
+        cp_type : Checkpoint type. Options are 'data' or 'model'.
+
+        """
         self.dict = defaultdict(dict)
         self.type = cp_type
         if self.type == 'data':
@@ -41,7 +52,17 @@ class CheckpointDict:
         else:
             self.counter = 1
 
-    def save(self, obj: Any, name: str) -> None:
+    def save(self, obj: Union[pd.DataFrame, keras.Sequential], name: str) -> None:
+        """
+        Saves the inputted obj, whether data (pd.DataFrame or np.ndarray format)
+        or model (keras.Sequential format).
+
+        Parameters
+        ----------
+        obj : The actual data or model object.
+        name : The key used to lookup this obj in the underlying defaultdict.
+
+        """
         new_key = f'{self.counter}) {name}'
         self.dict[new_key] = obj
         if isinstance(obj, pd.DataFrame):
@@ -57,12 +78,33 @@ class CheckpointDict:
         self.counter += 1
 
     def get(self) -> DefaultDict[str, Dict]:
+        """
+        Retrieves the internal defaultdict.
+
+        Returns
+        -------
+        self.dict : the internal defaultdict that store of obj checkpoints
+
+        """
         return self.dict
 
 
 def print_bold(
-    text: str, ui: str = 'notebook', n_before: int = 0, n_after: int = 0
+    text: str, ui: str = 'console', n_before: int = 0, n_after: int = 0
 ) -> None:
+    """
+    A global function that prints out a given text in bold format. It uses
+    two different fonts depending on whether the user interface or ui is a
+    'console' or 'notebook'.
+
+    Parameters
+    ----------
+    text : The text to printed out.
+    ui : Either 'console' (default) or 'notebook'.
+    n_before : Number of newlines added before the actual text for formatting.
+    n_after : Number of newlines added after the actual text for formatting.
+
+    """
 
     if ui == 'notebook':
         nl = "<br>"
@@ -76,19 +118,29 @@ def run_package(
     config_file: str, data: pd.DataFrame = None
 ) -> Tuple[DefaultDict[str, Dict], DefaultDict[str, Dict]]:
     """
-    ABOUT: ff
-    --------------------------------------------------------------------------
-    INPUTS:
-    --------------------------------------------------------------------------
-    data: 
-    ts_column: 
-    sep:
-    target: 
+    The MASTER function of the entire dnntime package. The runs the entire DL
+    pipeline end-to-end from a) loading data from source, b) ETL preprocessing,
+    c) statistical EDA and visualization and d) model search and evaluations.
+
+    Parameters
+    ----------
+    config_file : Provides all the (hyper)parameters needed to this function.
+                  Each of its components will be validated. Must be a *.yaml file!
+    data : DataFrame version of the data source. Not needed if the config_file
+           already specifies a file_path the data source.
+
+    Returns
+    -------
+    data_dict : A custom CheckpointDict dict that saves a copy of the data during
+                during each and every point of its transformation.
+    model_dict : A custom CheckpointDict dict that saves all the DNN models used,
+                their forecasts, and scores.
+
     """
 
     start_time = time.time()
 
-    ### Introductory texts:
+    # Introductory texts
     art.tprint("Running   deep\ntime-series\npackage...")
     print("-------------------------------------------------------------------")
     print("-------------------------------------------------------------------\n")
@@ -171,7 +223,7 @@ def run_package(
             df = df[target].to_frame()
             data_dict.save(df, 'Univarate')
 
-        freq, _ = interval_to_freq(time_interval)
+        freq = interval_to_freq(time_interval)
         print(f"Frequency has been set to {freq}.\n")
 
         if 'auto_clean' in preprocess.keys():
@@ -323,10 +375,10 @@ def run_package(
         max_gap = supervise['max_gap']
 
         # Converting all 'str' periods into #timesteps based of the stated 'freq'
-        n_input = interval_to_timesteps(train_period, freq)  # num input timesteps
-        n_output = interval_to_timesteps(fcast_period, freq)  # num output timesteps
-        n_val = interval_to_timesteps(val_set, freq)  # validation dataset size
-        n_test = interval_to_timesteps(test_set, freq)  # test dataset size
+        n_input = period_to_timesteps(train_period, freq)  # num input timesteps
+        n_output = period_to_timesteps(fcast_period, freq)  # num output timesteps
+        n_val = period_to_timesteps(val_set, freq)  # validation dataset size
+        n_test = period_to_timesteps(test_set, freq)  # test dataset size
         n_feature = 1 if univariate else len(df.columns)  # number of feature(s)
         print("Performing walk-forward validation.")
 

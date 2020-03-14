@@ -6,17 +6,17 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, \
 
 def calc_rmse(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Root Mean Square Error (RMSE)
+    Calculates Root Mean Square Error (RMSE).
     Source: https://en.wikipedia.org/wiki/Root-mean-square_deviation
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    rmse: RMSE score value.
 
     """
     return np.sqrt(np.mean((y - y_hat)**2))
@@ -24,16 +24,16 @@ def calc_rmse(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def calc_nrmse(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Normalized Root Mean Square Error (NRMSE)
+    Calculates Normalized Root Mean Square Error (NRMSE).
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    rmse: RMSE score value.
 
     """
     pass
@@ -41,16 +41,16 @@ def calc_nrmse(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def calc_rmsle(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Root Mean Squared Logarithmic Error (RMSLE)
+    Calculates Root Mean Squared Logarithmic Error (RMSLE).
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    rmsle: RMSLE score value.
 
     """
     pass
@@ -58,17 +58,17 @@ def calc_rmsle(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def calc_mae(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Mean Absolute Error (MAE)
+    Calculates Mean Absolute Error (MAE).
     Source: https://en.wikipedia.org/wiki/Mean_absolute_error
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    mae: MAE score value.
 
     """
     return np.mean(np.abs(y - y_hat))
@@ -76,17 +76,17 @@ def calc_mae(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def calc_mape(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Mean Absolute Percent Error (MAPE)
+    Calculates Mean Absolute Percent Error (MAPE).
     Source: https://en.wikipedia.org/wiki/Mean_absolute_percentage_error
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    mape: MAPE score value.
 
     """
     perc_err = (100*(y - y_hat))/y
@@ -95,17 +95,17 @@ def calc_mape(y: np.ndarray, y_hat: np.ndarray) -> float:
 
 def calc_smape(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
-    Calculate Symmetric Mean Absolute Percent Error (SMAPE)
+    Calculates Symmetric Mean Absolute Percent Error (SMAPE).
     Source: https://en.wikipedia.org/wiki/Symmetric_mean_absolute_percentage_error
 
     Parameters
     ----------
-    y : DESCRIPTION.
-    y_hat : DESCRIPTION.
+    y : Actual target dataset.
+    y_hat : Predicted or forecasted dataset.
 
     Returns
     -------
-    float: DESCRIPTION.
+    smape: SMAPE score value.
 
     """
     pass

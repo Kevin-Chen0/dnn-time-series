@@ -22,6 +22,22 @@ import plotly.graph_objects as go
 def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
             x_label: str = "Date", width: int = 10, height: int = 4,
             line_width: float = 0.1) -> None:
+    """
+    Plot the input time-series dataframe using plotly visualization.
+
+    Parameters
+    ----------
+    df : The pd.DataFrame to be plotted. Currently must be univariate.
+    dt_col : Datetime column or the time-series axis.
+    target : Target column or the y-axis.
+    title : Title of the displayed plot.
+    y_label : y_label of the displayed plot.
+    x_label : x_label of the displayed plot. The default is 'Date'.
+    width : The width of the plot display. The default width is 10.
+    height : The height of the plot display. The default height is 4.
+    line_width : How solid the plot line is. The default is 0.1.
+
+    """
     if isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex):
         df = df.copy()  # prevents from modifying original df
         df[dt_col] = df.index
@@ -43,8 +59,25 @@ def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str
     print()
 
 
-def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
-                split: str = 'y', line_width: float = 0.1) -> None:
+def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
+                y_label: str, x_label: str = "Date", split: str = 'y',
+                line_width: float = 0.1) -> None:
+    """
+    Plot the input time-series dataframe using plotly visualization into
+    multiple subplots. Uses ts_sub_split() to demarcate the time-series.
+
+    Parameters
+    ----------
+    df : The pd.DataFrame to subplot. Currently must be univariate.
+    dt_col : Datetime column or the time-series axis.
+    target : Target column or the y-axis.
+    title : Title of the displayed plot.
+    y_label : y_label of the displayed plot.
+    x_label : x_label of the displayed plot. The default is 'Date'.
+    split : How the time-series is demarcated. The default is 'y' for year.
+    line_width : How solid the plotline is. The default is 0.1.
+
+    """
     sub_ts, idx = ts_sub_split(df, split=split)
     for i, sub in enumerate(sub_ts):
         if split == 'y':
@@ -52,6 +85,7 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label:
             ts_plot(sub, dt_col, target,
                     title=f"{title} for {year}",
                     y_label=y_label,
+                    x_label=x_label,
                     line_width=line_width
                     )
         elif split == 'm':
@@ -59,6 +93,7 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label:
             ts_plot(sub, dt_col, target,
                     title=f"{title} for {year}-{month:02d}",
                     y_label=y_label,
+                    x_label=x_label,
                     line_width=line_width
                     )
         elif split == 'q':
@@ -66,11 +101,29 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label:
             ts_plot(sub, dt_col, target,
                     title=f"{title} from {year}-{month:02d} to {year}-{month+2:02d}",
                     y_label=y_label,
+                    x_label=x_label,
                     line_width=line_width
                     )
 
 
-def ts_sub_split(df: pd.DataFrame, split: str = 'y', shift: int = 0) -> Tuple[List, Set]:
+def ts_sub_split(df: pd.DataFrame, split: str = 'y', offset: int = 0) -> Tuple[List, Set]:
+    """
+    Demarcate the time-series dataframe for ts_sub_plot() func to use to plot
+    multiple sub time-series.
+
+    Parameters
+    ----------
+    df : The pd.DataFrame to subplot. Currently must be univariate.
+    split : How the time-series is demarcated. The default is 'y' for year.
+    offset : How much to shift this sub time-series period relevant to calendar.
+             The default is 0 or split at the beginning of each calendar period.
+
+    Returns
+    -------
+    sub : The list of all sub time-series.
+    idx : The key for each sub time-series depending on how series is split.
+
+    """
     sub = []
     if isinstance(split, str):
         # annual
@@ -107,9 +160,26 @@ def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
                            title: str, y_label: str, x_label: str = "Date",
                            line_width: float = 0.1, model: str = 'additive',
                            plotly: bool = False, prophet: bool = False) -> None:
+    """
+    Plot the error, trend, and seasonality (ETS) decompositions of the input
+    time-series dataframe using statsmodels.
 
+    Parameters
+    ----------
+    df : The pd.DataFrame to be plotted. Currently must be univariate.
+    dt_col : Datetime column or the time-series axis.
+    target : Target column or the y-axis.
+    title : Title of the displayed plot.
+    y_label : y_label of the displayed plot.
+    x_label : x_label of the displayed plot. The default is 'Date'.
+    line_width : How solid the plotline is. The default is 0.1.
+    model : Types of seasonal components. Either 'additive' (default) or 'multiplicative'.
+    plotly : Whether the plot using plotly or matplotlib+seaborn. The default is False.
+    prophet : Whether the include results from Facebook's Prophet. The default is False.
+
+    """
     pd.plotting.register_matplotlib_converters()
-    ets = seasonal_decompose(df[target], model)  # ['additive', 'multiplicative']
+    ets = seasonal_decompose(df[target], model)
     if plotly:
         # Observed
         ts_plot(ets.observed.to_frame(), dt_col, target,
@@ -161,16 +231,16 @@ def acf_pacf_plot(df: pd.DataFrame, target: str, title: str = "",
                   lags: List[int] = [24], figsize: Tuple[int, int] = (20,8)
                   ) -> None:
     """
-    Autocorrelation Function (ACF) and Partial-Autocorrelation (PACF) Analysis
+    Autocorrelation Function (ACF) and Partial-Autocorrelation (PACF) Analysis.
     Source: https://www.kaggle.com/nicholasjhana/univariate-time-series-forecasting-with-keras
 
     Parameters
     ----------
-    df : DESCRIPTION
-    target : DESCRIPTION
-    title : DESCRIPTION
-    lags : DESCRIPTION
-    figsize : DESCRIPTION
+    df : The pd.DataFrame to be plotted. Currently must be univariate.
+    target : Target column or the y-axis.
+    title : Title of the displayed plot.
+    lags : Num of timesteps between each tick. The default is 24, or a day for hourly freq.
+    figsize : The dimension size of the plot display. The default is (20, 8).
 
     """
     for l in lags:
@@ -188,9 +258,22 @@ def acf_pacf_plot(df: pd.DataFrame, target: str, title: str = "",
 def adf_stationary_test(df: pd.DataFrame, alpha: float = 0.05, criterion:
                         str = 'AIC') -> bool:
     """
-    Original source: https://www.insightsbot.com/augmented-dickey-fuller-test-in-python/
-    """
+    Test whether dataframe is stationary using the Augmented Dickey Fuller (ADF)
+    test found in statsmodel.
+    Source: https://www.insightsbot.com/augmented-dickey-fuller-test-in-python/
 
+    Parameters
+    ----------
+    df : The pd.DataFrame to test for stationarity. Currently must be univariate.
+    alpha : The number that is (1 - confidence interval). The default is 0.05 for 95% CI.
+    criterion : The criterion used to automatically determine lag. The default
+                is 'AIC' or Akaike information criterion.
+
+    Returns
+    -------
+    stationary : Whether the df stationary or not.
+
+    """
     # Run Augmented Dickey-Fuller Test (ADF) statistical test:
     adf_test = adfuller(df, autolag=criterion)
     p_value = adf_test[1]
@@ -204,7 +287,7 @@ def adf_stationary_test(df: pd.DataFrame, alpha: float = 0.05, criterion:
                                               '      P-Value',
                                               '      # Lags Used',
                                               '      # Observations Used'])
-    #Add Critical Values
+    # Add Critical Values
     for key, value in adf_test[4].items():
         results['      Critical Value (%s)'%key] = value
     print('    - Augmented Dickey-Fuller Test Results:\n')

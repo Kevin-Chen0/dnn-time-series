@@ -13,7 +13,27 @@ class ConvLSTMWrapper:
     def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1, 
                  n_col: int = 1, n_feature: int = 1, n_unit: int = 64,
                  d_rate: int = 0.15, optimizer: str = 'adam', loss: str = "mse"):
+        """
+        Wrapper that abstracts the underlying ConvLSTM Model in order to better
+        decouple the actual model specification from DNN package execution.
+        Although ConvLSTM is developed for extract 2D data, such as images,
+        it can also be used in extract "stacked" time-series data in parallel,
+        either by entire series and its multiple features axes or equal 
+        subsequences of a single series. This wrapper's design uses the latter.
 
+        Parameters
+        ----------
+        n_steps : Num of steps, where each step is a subseq. Default num is n_input/n_output.
+        l_subseq : Len of each subseq. Default len is n_output, thus n_steps*l_subseq = n_input.
+        n_row : Num of rows, representing image's height. Default is 1.
+        n_col : Num of columns, representing image's width. Default is n_output.
+        n_feature : Number of features, a univariate time-series has n_feature=1.
+        n_unit : Number of neural units per layer.
+        d_rate : Dropout rate for each layer, see: https://keras.io/layers/core/#dropout
+        optimizer : How model learns (i.e. SDG), see: https://keras.io/optimizers/
+        loss : The loss or error function for model to minimize, see: https://keras.io/losses/
+
+        """
         self.conv_model = StackedConvLSTM(n_steps, n_row, n_col, n_unit,
                                           n_feature, d_rate)
         self.conv_model.compile(optimizer, loss)
@@ -25,7 +45,8 @@ class ConvLSTMWrapper:
 
     def reshape(self, X: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
-        ConvLSTM Hyperparameters
+        Reshapes ConvLSTM hyperparameters so X is 5-dim and y is 3-dim in order
+        to input into the ConvLSTM model.
         Source: https://machinelearningmastery.com/how-to-develop-lstm-models-for-multi-step-time-series-forecasting-of-household-power-consumption/
 
         Parameters
@@ -35,9 +56,9 @@ class ConvLSTMWrapper:
 
         Returns
         -------
-        X : [samples, n_input/length_subsequence, n_row, n_col, n_feature] or
+        X : [samples, n_input/length_subsequence, n_row, n_col, n_feature] or 
             [samples, subseq, rows, cols, channel]
-        y : [samples, n_output, features]
+        y : [samples, n_output, features] or
             [samples, target, channel]
 
         """
@@ -50,7 +71,19 @@ class ConvLSTMWrapper:
 
     def fit(self, X_train: np.ndarray, y_train: np.ndarray, n_epoch: int = 10,
             n_batch: int = 1, verbose: int = 0) -> None:
+        """
+        Wraps ConvLSTM model.fit() func, including the time it takes to
+        finish running.
 
+        Parameters
+        ----------
+        X_train : Training set with predictor columns used to fit the model. 
+        y_train : Training set with the target column used to fit the model. 
+        n_epoch : Num of passovers over the training set.
+        n_batch : Batch size, or set of N data-points.
+        verbose : Whether or not to display fit status, 1 is yes and 0 is no.
+
+        """
         X_train, y_train = self.reshape(X_train, y_train)
 
         start_time = time.time()
@@ -61,7 +94,24 @@ class ConvLSTMWrapper:
 
     def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
                  verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+        """
+        Wraps the ConvLSTM model's forecast of the test set and evaluation of
+        its accuracy into one function.
 
+        Parameters
+        ----------
+        X_test : Test set with predictor columns used to make model forecast.
+        y_test : Training set with the target column used to evaluate model forecast.
+        score_type : Type of scoring metric used to measure model's forecast error.
+        verbose : Whether or not to display predict status, 1 is yes and 0 is no.
+
+        Returns
+        -------
+        self.conv_model : The trained ConvLSTM model itself.
+        gru_pred : The ConvLSTM's forecasted data or y_hat based on X_test.
+        rmse : The root mean-squared error score used as default evaluation metric.
+
+        """
         X_test, y_test = self.reshape(X_test, y_test)
         conv_pred = self.conv_model.predict(X_test, verbose=verbose)
 
@@ -82,7 +132,23 @@ class ConvLSTMWrapper:
 
 def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int, 
                     n_feature: int, d_rate: float = 0.5) -> Sequential:
+    """
+    A standard, encoder-decoder ConvLSTM model that includes dropout rates.
 
+    Parameters
+    ----------
+    n_steps : Num of steps, where each step is a subseq. Default num is n_input/n_output.
+    n_row : Num of rows, representing an image's height. Default is 1.
+    n_col : Num of columns, representing an image's width. Default is n_output.
+    n_unit : Number of neural units per layer.
+    n_feature : Number of features, a univariate time-series has n_feature=1.
+    d_rate : Dropout rate for each layer, see: https://keras.io/layers/core/#dropout
+
+    Returns
+    -------
+    model : The keras.Sequential model architecture itself to be fitted with data.
+
+    """
     model = Sequential()
     # define encoder
     model.add(ConvLSTM2D(n_unit, (1,3), activation='relu', \

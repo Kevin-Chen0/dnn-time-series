@@ -5,6 +5,16 @@ from typing import Tuple
 class timesteps:
 
     def __init__(self, freq: str):
+        """
+        Initializes timesteps class, which can output a number of timesteps with
+        ease given the desired period duration in text. Contains mapping of num
+        of timesteps to a stated period, relative to each other.
+
+        Parameters
+        ----------
+        freq : The time-series interval, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases 
+
+        """
         map = {'s': 1,
                't': 1/60,
                'min': 1/60,
@@ -45,40 +55,60 @@ class timesteps:
 
 
 def interval_to_freq(time_interval: str) -> Tuple[str, int]:
+    """
+    Convert the natural language-based time period into freq char in order to
+    standardize user input.
+
+    Parameters
+    ----------
+    time_interval : Natural lanaguage time period.
+
+    Returns
+    -------
+    freq : Appropriate frequency char, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases 
+
+    """
     time_interval = time_interval.strip().lower()
     freq = ''
     if time_interval in ['seconds', 'second', 'sec', 's']:
         freq = 'S'
-        seasonal_period = 60
     elif time_interval in ['minutes', 'minute', 'min', 't']:
         freq = 'T'
-        seasonal_period = 60
     elif time_interval in ['hours', 'hour', 'hourly', 'hr', 'h']:
         freq = 'H'
-        seasonal_period = 24
     elif time_interval in ['days', 'day', 'daily', 'd']:
         freq = 'D'
-        seasonal_period = 30
     elif time_interval in ['weeks', 'week', 'weekly', 'w']:
         freq = 'W'
-        seasonal_period = 52
     elif time_interval in ['months', 'month', 'mth', 'm']:
         freq = 'M'
-        seasonal_period = 12
     elif time_interval in ['qtr', 'quarter', 'quar', 'q']:
         freq = 'Q'
-        seasonal_period = 4
     elif time_interval in ['years', 'year', 'annual', 'y', 'a']:
         freq = 'Y'
-        seasonal_period = 1
     else:
         raise ValueError("Parameter time_interval not recognized.")
-        return
+        return None
 
-    return freq, seasonal_period
+    return freq
 
 
-def interval_to_timesteps(period: str, freq: str) -> int:
+def period_to_timesteps(period: str, freq: str) -> int:
+    """
+    Converts the inputted time period in natural language to a number of timesteps,
+    given the inputted freq char that states what are the time intervals length.
+
+    Parameters
+    ----------
+    period : Time period in natural language.
+    freq : Frequency char that should be provided by interval_to_freq().
+        DESCRIPTION.
+
+    Returns
+    -------
+    steps : Number of timesteps. If period len matches freq interval, then steps=1.
+
+    """
     ts = timesteps(freq)
     steps = 0
     if period == '':

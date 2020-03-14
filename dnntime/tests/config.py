@@ -4,7 +4,18 @@ import pytz
 
 
 def validate_config(config: pd.DataFrame) -> None:
+    """
+    Checks that the contents in the config file are indeed valid to ensure the
+    parameters inputted by the user will not cause unexpected errors. The config
+    MUST pass all Assertions mentioned here in order to be able to proceed with
+    the rest of the run_package() function. Note that the user may freely omit
+    blocks in the config YAML file, so those blocks will not be checked if removed. 
 
+    Parameters
+    ----------
+    config : The contents in the config file in DataFrame format.
+
+    """
     # Before STEPS ###########################################################
     if 'meta' in config.keys():
         meta = config['meta']
