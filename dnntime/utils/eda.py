@@ -3,9 +3,12 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 sns.set(style="white", color_codes=True)
+# Plotly Visualisations
+import plotly.express as px
+import plotly.graph_objects as go
 # Add commas to y-axis tick values for graphs
 formatter = ticker.StrMethodFormatter('{x:,.0f}')
-from typing import List, Set, Tuple
+from typing import List, Tuple
 # TSA from Statsmodels
 from statsmodels.tsa.api import adfuller
 from statsmodels.tsa.seasonal import seasonal_decompose
@@ -13,10 +16,6 @@ from statsmodels.tsa.stattools import acf, acovf, pacf, pacf_yw, pacf_ols
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 # Facebook's prophet
 from fbprophet import Prophet
-# Kevin - Plotly Visualisations
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.graph_objects as go
 
 
 def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
@@ -106,7 +105,8 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
                     )
 
 
-def ts_sub_split(df: pd.DataFrame, split: str = 'y', offset: int = 0) -> Tuple[List, Set]:
+def ts_sub_split(df: pd.DataFrame, split: str = 'y', offset: int = 0
+                 ) -> Tuple[List, List]:
     """
     Demarcate the time-series dataframe for ts_sub_plot() func to use to plot
     multiple sub time-series.
@@ -217,7 +217,7 @@ def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
 
     if prophet:
         dfp = df.reset_index()
-        dfp.columns = ['ds','y']
+        dfp.columns = ['ds', 'y']
         model = Prophet()
         model.fit(dfp);
         forecast = model.predict(dfp)
@@ -228,7 +228,7 @@ def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
 
 
 def acf_pacf_plot(df: pd.DataFrame, target: str, title: str = "",
-                  lags: List[int] = [24], figsize: Tuple[int, int] = (20,8)
+                  lags: List[int] = [24], figsize: Tuple[int, int] = (20, 8)
                   ) -> None:
     """
     Autocorrelation Function (ACF) and Partial-Autocorrelation (PACF) Analysis.
@@ -289,8 +289,8 @@ def adf_stationary_test(df: pd.DataFrame, alpha: float = 0.05, criterion:
                                               '      # Observations Used'])
     # Add Critical Values
     for key, value in adf_test[4].items():
-        results['      Critical Value (%s)'%key] = value
-    print('    - Augmented Dickey-Fuller Test Results:\n')
-    print(results.to_string() + '\n')
+        results[f'      Critical Value ({key})'] = value
+    print("    - Augmented Dickey-Fuller Test Results:\n")
+    print(results.to_string() + "\n")
 
     return stationary

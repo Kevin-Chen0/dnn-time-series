@@ -47,8 +47,8 @@ def load_data(data: Union[str, pd.DataFrame], dt_col: str, deln: str = ','
     return df_load
 
 
-def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq: 
-               str = 'H', allow_neg: bool = True, all_num:bool = False, fill: 
+def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
+               str = 'H', allow_neg: bool = True, all_num: bool = False, fill:
                str = 'linear', learning_type: str = 'reg') -> pd.DataFrame:
     """
     Cleans the input dataframe, which contains the following steps:
@@ -94,7 +94,7 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
     tz_offset = 0
     if timezone != '':
         tz = datetime.datetime.now(pytz.timezone(timezone))
-        tz_offset += tz.utcoffset().total_seconds()/60/60
+        tz_offset += int(tz.utcoffset().total_seconds()/60/60)
     if not isinstance(df_clean.index, pd.DatetimeIndex):
         df_clean.index = pd.to_datetime(df_clean.index, utc=True)
     if df_clean.index.freq is None:
@@ -121,7 +121,7 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
     # 6) Replace any negative number as NaN if target negative numbers are not allowed
     if not allow_neg:
         df_clean[df_clean < 0] = np.NaN
-        print(f"    - Since negative values are unpermitted, all negative " 
+        print(f"    - Since negative values are unpermitted, all negative "
               "values found in dataset are converted to NaN.")
     # 7) Fill the missing target values via given interpolation in-place
     if fill != '' and df_clean.isnull().sum().sum() > 0:
@@ -197,7 +197,7 @@ def log_power_transform(df: pd.DataFrame, method: str = 'box-cox',
         data_trans = power_transform(df, method=method, standardize=standardize)
         df_trans = pd.DataFrame(data_trans, index=df.index, columns=df.columns)
 
-    title = str(method.title() + ' ' + stan)    
+    title = str(method.title() + ' ' + stan)
     return df_trans, title
 
 
@@ -250,7 +250,7 @@ def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input
                n_output: int = 1, n_feature: int = 1, g_min: int = 0, g_max: int = 0
                ) -> Union[Tuple[Tuple, Tuple, Tuple], Tuple[Tuple, Tuple, Tuple, Tuple]]:
     """
-    Split the time-series dataframe into training set, test set, and optionally 
+    Split the time-series dataframe into training set, test set, and optionally
     validation set. For each set, use make_supervise() to split between predictor
     columns (X) and target column (y). Using the Walk-Forward Validation method.
     Source: https://machinelearningmastery.com/backtest-machine-learning-models-time-series-forecasting/
@@ -259,7 +259,7 @@ def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input
     ----------
     df : The pd.DataFrame to be split. Can be either univariate or multivariate.
     target : The target column name of df.
-    n_test : The num of samples in testset, which will be carved from the end of df. 
+    n_test : The num of samples in testset, which will be carved from the end of df.
     n_val : The num of samples in valset, which will be carved from the end of df after
             testset is taken. The remaining samples constitute the training set.
     n_input : The num of input timesteps to be fed into the DNN model.
@@ -280,9 +280,9 @@ def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input
     X, y, t = make_supervised(data, target, n_input, n_output, n_feature)
     gap = randint(int(g_min*len(X)), int(g_max*len(X)))
 
-    X_train0, X_test, y_train0, y_test = gap_train_test_split(X, y, test_size=n_test, \
+    X_train0, X_test, y_train0, y_test = gap_train_test_split(X, y, test_size=n_test,
                                                               gap_size=gap)
-    _, _, t_train0, t_test = gap_train_test_split(X, t, test_size=n_test, \
+    _, _, t_train0, t_test = gap_train_test_split(X, t, test_size=n_test,
                                                   gap_size=gap)
     # Train, test split
     if n_val == 0:
@@ -292,9 +292,9 @@ def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input
         return orig, train, test
     # Train, val, test split
     else:
-        X_train, X_val, y_train, y_val = gap_train_test_split(X_train0, y_train0, test_size=n_val, \
+        X_train, X_val, y_train, y_val = gap_train_test_split(X_train0, y_train0, test_size=n_val,
                                                               gap_size=gap)
-        _, _, t_train, t_val = gap_train_test_split(X_train0, t_train0, test_size=n_val, \
+        _, _, t_train, t_val = gap_train_test_split(X_train0, t_train0, test_size=n_val,
                                                     gap_size=gap)
         orig = (X, y, t)
         train = (X_train, y_train, t_train)
@@ -346,6 +346,6 @@ def make_supervised(data: pd.DataFrame, target: str, n_input: int, n_output: int
             t.append(t_index)
         # Move along one time step
         in_start += 1
-        
+
     X_sv, y_sv, t_sv = np.array(X), np.array(y), np.array(t)
     return X_sv, y_sv, t_sv

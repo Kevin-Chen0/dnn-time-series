@@ -109,4 +109,3 @@ def calc_smape(y: np.ndarray, y_hat: np.ndarray) -> float:
 
     """
     pass
-

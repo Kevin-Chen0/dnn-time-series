@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-from IPython.display import display, HTML
+import art
 import pandas as pd
+import operator
+import time
+import yaml
 import warnings
 warnings.filterwarnings("ignore")
 
-import yaml
-from collections import defaultdict
-from typing import DefaultDict, Dict, Tuple, Union
-import operator
-import time
-import art
 import tensorflow as tf
 from tensorflow import keras
+from collections import defaultdict
+from typing import DefaultDict, Dict, Tuple, Union
+from IPython.display import display, HTML
 
 #################################################
 
@@ -34,7 +34,7 @@ from .utils.eda import ts_plot, ets_decomposition_plot, acf_pacf_plot, \
 
 class CheckpointDict:
 
-    def __init__(self, cp_type: str):
+    def __init__(self, cp_type: str) -> None:
         """
         CheckpointDict is a custom class that stores all of the checkpoints or
         snapshots of either the data or models. Its internal defaultdict is returned
@@ -66,14 +66,14 @@ class CheckpointDict:
         new_key = f'{self.counter}) {name}'
         self.dict[new_key] = obj
         if isinstance(obj, pd.DataFrame):
-            print(f"\n--> {name} {self.type} saved in {self.type}" + \
+            print(f"\n--> {name} {self.type} saved in {self.type}"
                   f"_dict[{new_key}]. See head below:")
             display(HTML(obj.head().to_html()))
             print("\n    See tail below:")
             display(HTML(obj.tail().to_html()))
             print()
         else:
-            print(f"\n--> {name} {self.type} saved in {self.type}" + \
+            print(f"\n--> {name} {self.type} saved in {self.type}"
                   f"_dict[{new_key}].\n")
         self.counter += 1
 
@@ -141,7 +141,7 @@ def run_package(
     start_time = time.time()
 
     # Introductory texts
-    art.tprint("Running   deep\ntime-series\npackage...")
+    art.tprint("Running   DNN\ntime-series\npackage...")
     print("-------------------------------------------------------------------")
     print("-------------------------------------------------------------------\n")
     print("SUMMARY STEPS:")
@@ -162,9 +162,9 @@ def run_package(
         with open(config_file, "r") as file:
             content = file.read()
             config = yaml.safe_load(content)
-    except:
-        print("Something wrong with YAML file, please check.")
-        return
+    except FileNotFoundError as e:
+        print(e)
+        return None, None
 
     # Check the config dict to ensure it passes all of the assertions
     validate_config(config)
@@ -178,7 +178,6 @@ def run_package(
     data_dict = CheckpointDict('data')
 
 
-    ########## This is where we start the loading of the data file ######################
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 1) {space}Extract Data from Source", ui)
     print("-------------------------------------------------------------------\n")
@@ -260,7 +259,7 @@ def run_package(
 
         # Prevent errors
         pd.plotting.register_matplotlib_converters()
-    
+
         # Define data with the defined plot labels in the config file
         print("Plot the entire time-series data:\n")
         ts_plot(df, dt_col, target,
@@ -281,17 +280,17 @@ def run_package(
         # Initializing immutable config variables for STEP 4) and beyond
         analyze = config['analyze']
         ci = analyze['confidence_interval']
-    
-        print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).", 
+
+        print_bold(f"4.1) {space}Testing stationarity using Augmented Dickey-Fuller (ADF).",
                    ui, n_after=1)
         stationarity = adf_stationary_test(df, 1-ci)
         if stationarity:
-            print(f"Current data is stationary with {ci*100}% " + \
+            print(f"Current data is stationary with {ci*100}% "
                   "confidence interval.\n")
         else:
-            print(f"Current data is non-stationary with {ci*100}% " + \
+            print(f"Current data is non-stationary with {ci*100}% "
                   "confidence interval.\n")
-    
+
         print_bold(f"4.2) {space}Printing out ETS decomposition plot.", ui, n_before=1, n_after=1)
         # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label);
         # ets = ets_decomposition_plot(ts_df, ts_column, target, title, y_label,
@@ -311,7 +310,7 @@ def run_package(
 
         # print_bold(f"4.4) {space}Expotential Smoothing Holt-Winters.", ui,
         #            n_before=1, n_after=1)
-    
+
         # print_bold(f"4.5) {space}ARIMA.", ui, n_before=1)
 
     except KeyError:
@@ -345,11 +344,13 @@ def run_package(
                 df, trans_type = log_power_transform(df, method=step,
                                                      standardize=standardize)
             elif step in ['detrend', 'deseasonalize', 'residual-only']:
-                info = f"5.{substep}) Performed the following adjustment: {step.title()}." 
-                df, decom_type = decompose(df, target, decom_type=step, decom_model=decom_model)
+                info = f"5.{substep}) Performed the following adjustment: " + \
+                        "{step.title()}."
+                df, decom_type = decompose(df, target, decom_type=step,
+                                           decom_model=decom_model)
 
             print_bold(f"{info}", ui)
-            data_dict.save(df, step.title()+standardize_note) 
+            data_dict.save(df, step.title()+standardize_note)
             substep += 1
             print()
 
@@ -357,14 +358,10 @@ def run_package(
         print("'transform' section is omitted in config, therefore skipping this step.")
 
 
-    ##################################################################################################
-    ### Transform dataset into supervised ML problem with walk-forward validation.
-    ### Shifting time-steps
-    ##################################################################################################
     print("\n-------------------------------------------------------------------")
     print_bold(f"STEP 6) {space}Preprocessing III (Make Supervised)", ui)
     print("-------------------------------------------------------------------\n")
-
+    # Transform dataset into supervised ML problem with walk-forward validation.
     try:
         # Initializing immutable config variables for STEP 6) and beyond
         supervise = config['supervise']
@@ -411,7 +408,7 @@ def run_package(
         test_prct = len(X_test)/len(X)*100
         gap_prct = 100 - train_prct - val_prct - test_prct
         print("\nSplit %:")
-        print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: " + \
+        print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: "
               f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
 
         print("\nDataset shapes:")
@@ -470,7 +467,7 @@ def run_package(
 
         evaluate = config['evaluate']
         score_type = evaluate['score_type']
-    
+
         if len(tf.config.list_physical_devices('GPU')) > 0:
             print("GPU is enabled.")
         else:
@@ -522,10 +519,10 @@ def run_package(
         if model_type.lower() in ['convlstm', 'all']:
             name = 'CONVLSTM'
             print_bold(f"7.4) {space}Running a ConvLSTM Model...", ui, n_before=1, n_after=1)
-            conv = ConvLSTMWrapper(n_steps=int(n_input/n_output), # num of steps
-                                   l_subseq=n_output, # len of subsequence
+            conv = ConvLSTMWrapper(n_steps=int(n_input/n_output),  # num of steps
+                                   l_subseq=n_output,  # len of subsequence
                                    n_row=1,  # len of "image" row, can be left as 1
-                                   n_col=n_output,    # len of "image" col
+                                   n_col=n_output,   # len of "image" col
                                    n_feature=n_feature, n_unit=n_unit,
                                    d_rate=d_rate, optimizer=opt, loss=loss
                                    )
@@ -546,7 +543,7 @@ def run_package(
 
         print("\n-----------------------------------------------------------------")
         print("-----------------------------------------------------------------")
-        print_bold("The best deep learning model is:", ui, n_before=1)
+        print_bold("The best DNN model is:", ui, n_before=1)
         print(f"    {best_model_name}")
         best_score = model_dict.get()[best_model_name][score_type]
         print(f"    {score_type.upper()} score: {best_score:.4f}")
@@ -554,7 +551,7 @@ def run_package(
         run_time = end_time - start_time
         print(f"\nTotal package runtime: {(run_time/60):.2f} min")
     except KeyError:
-        print("'dnn' section is omitted in config, therefore skipping this " + \
+        print("'dnn' section is omitted in config, therefore skipping this "
               "step. Only data_dict is returned, leaving model_dict as None."
               )
         return data_dict.get(), None

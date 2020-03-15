@@ -10,15 +10,16 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 class ConvLSTMWrapper:
 
-    def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1, 
+    def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1,
                  n_col: int = 1, n_feature: int = 1, n_unit: int = 64,
-                 d_rate: int = 0.15, optimizer: str = 'adam', loss: str = "mse"):
+                 d_rate: float = 0.15, optimizer: str = 'adam', loss: str = "mse"
+                 ) -> None:
         """
         Wrapper that abstracts the underlying ConvLSTM Model in order to better
         decouple the actual model specification from DNN package execution.
         Although ConvLSTM is developed for extract 2D data, such as images,
         it can also be used in extract "stacked" time-series data in parallel,
-        either by entire series and its multiple features axes or equal 
+        either by entire series and its multiple features axes or equal
         subsequences of a single series. This wrapper's design uses the latter.
 
         Parameters
@@ -56,7 +57,7 @@ class ConvLSTMWrapper:
 
         Returns
         -------
-        X : [samples, n_input/length_subsequence, n_row, n_col, n_feature] or 
+        X : [samples, n_input/length_subsequence, n_row, n_col, n_feature] or
             [samples, subseq, rows, cols, channel]
         y : [samples, n_output, features] or
             [samples, target, channel]
@@ -77,8 +78,8 @@ class ConvLSTMWrapper:
 
         Parameters
         ----------
-        X_train : Training set with predictor columns used to fit the model. 
-        y_train : Training set with the target column used to fit the model. 
+        X_train : Training set with predictor columns used to fit the model.
+        y_train : Training set with the target column used to fit the model.
         n_epoch : Num of passovers over the training set.
         n_batch : Batch size, or set of N data-points.
         verbose : Whether or not to display fit status, 1 is yes and 0 is no.
@@ -88,12 +89,12 @@ class ConvLSTMWrapper:
 
         start_time = time.time()
         self.conv_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch,
-                           verbose=verbose)
+                            verbose=verbose)
         end_time = time.time()
         self.run_time = end_time - start_time
 
-    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
-                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse',
+                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float]:
         """
         Wraps the ConvLSTM model's forecast of the test set and evaluation of
         its accuracy into one function.
@@ -130,7 +131,7 @@ class ConvLSTMWrapper:
         return self.conv_model, conv_pred, rmse
 
 
-def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int, 
+def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int,
                     n_feature: int, d_rate: float = 0.5) -> Sequential:
     """
     A standard, encoder-decoder ConvLSTM model that includes dropout rates.
@@ -151,7 +152,7 @@ def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int,
     """
     model = Sequential()
     # define encoder
-    model.add(ConvLSTM2D(n_unit, (1,3), activation='relu', \
+    model.add(ConvLSTM2D(n_unit, (1, 3), activation='relu',
                          input_shape=(n_steps, n_row, n_col, n_feature)))
     model.add(Flatten())
     # repeat encoding

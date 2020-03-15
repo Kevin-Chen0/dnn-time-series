@@ -9,9 +9,9 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 class LSTMWrapper:
 
-    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1, 
-                 n_unit: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
-                 loss: str = "mse"):
+    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1,
+                 n_unit: int = 64, d_rate: float = 0.15, optimizer: str = 'adam',
+                 loss: str = "mse") -> None:
         """
         Wrapper that abstracts the underlying LSTM Model in order to better
         decouple the actual model specification from DNN package execution.
@@ -39,8 +39,8 @@ class LSTMWrapper:
 
         Parameters
         ----------
-        X_train : Training set with predictor columns used to fit the model. 
-        y_train : Training set with the target column used to fit the model. 
+        X_train : Training set with predictor columns used to fit the model.
+        y_train : Training set with the target column used to fit the model.
         n_epoch : Num of passovers over the training set.
         n_batch : Batch size, or set of N data-points.
         verbose : Whether or not to display fit status, 1 is yes and 0 is no.
@@ -48,12 +48,12 @@ class LSTMWrapper:
         """
         start_time = time.time()
         self.lstm_model.fit(X_train, y_train, epochs=n_epoch, batch_size=n_batch,
-                           verbose=verbose)
+                            verbose=verbose)
         end_time = time.time()
         self.run_time = end_time - start_time
 
-    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
-                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse',
+                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float]:
         """
         Wraps the LSTM model's forecast of the test set and evaluation of its
         accuracy into one function.
@@ -90,7 +90,7 @@ class LSTMWrapper:
 
 def VanillaLSTM(n_input: int, n_output: int, n_unit: int, n_feature: int) -> Sequential:
     """
-    A basic version of the LSTM model without any "bells and whistles". 
+    A basic version of the LSTM model without any "bells and whistles".
 
     Parameters
     ----------

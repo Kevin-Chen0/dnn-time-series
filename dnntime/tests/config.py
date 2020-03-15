@@ -9,7 +9,7 @@ def validate_config(config: pd.DataFrame) -> None:
     parameters inputted by the user will not cause unexpected errors. The config
     MUST pass all Assertions mentioned here in order to be able to proceed with
     the rest of the run_package() function. Note that the user may freely omit
-    blocks in the config YAML file, so those blocks will not be checked if removed. 
+    blocks in the config YAML file, so those blocks will not be checked if removed.
 
     Parameters
     ----------
@@ -32,8 +32,8 @@ def validate_config(config: pd.DataFrame) -> None:
             'console'
         ]
         assert len(set([meta['user_interface']]) - set(valid_ui)) == 0, \
-               f"{path}'user_interface' value must contain one of the " + \
-               f"following options: {valid_ui}."
+            f"{path}'user_interface' value must contain one of the " + \
+            f"following options: {valid_ui}."
 
     # For STEP 1) Extract Data from Source ###################################
     if 'extract' in config.keys():
@@ -43,7 +43,8 @@ def validate_config(config: pd.DataFrame) -> None:
         assert (
             'file_path' in extract.keys()
         ), f"'extract'->'file_path' key is not found in the config file."
-        assert isinstance(extract['file_path'], str
+        assert isinstance(
+            extract['file_path'], str
         ), f"{path}'file_path' value must be a str type."
         # Validate variable <delineator>
         assert (
@@ -128,8 +129,8 @@ def validate_config(config: pd.DataFrame) -> None:
                 'quadratic', 'cubic', 'krogh', 'pchip', 'akima', 'from_derivatives'
             ]
             assert len(set([clean['nan_fill_type']]) - set(valid_fills)) == 0, \
-                   f"{path}'nan_fill_type' value must be '' or within DataFrame.interpolate: " + \
-                   "https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html"
+                f"{path}'nan_fill_type' value must be '' or within DataFrame.interpolate: " + \
+                "https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html"
             # Validate variable <output_type>
             assert (
                 'output_type' in clean.keys()
@@ -145,9 +146,9 @@ def validate_config(config: pd.DataFrame) -> None:
                 'classification',
             ]
             assert len(set([clean['output_type']]) - set(valid_outputs)) == 0, \
-                   f"{path}'output_type' value must contain one of the " + \
-                   f"following options: {valid_outputs}."
- 
+                f"{path}'output_type' value must contain one of the " + \
+                f"following options: {valid_outputs}."
+
     # For STEPS 3-4) EDA I & II (General & Time-Series Stats) ################
     if 'analyze' in config.keys():
         analyze = config['analyze']
@@ -201,7 +202,7 @@ def validate_config(config: pd.DataFrame) -> None:
             'residual-only',
         ]
         assert len(set(transform['steps']) - set(valid_steps)) == 0, \
-               "{path}'steps' values must be within the following: {valid_steps}."
+            "{path}'steps' values must be within the following: {valid_steps}."
         # Validate variable <decom_model>
         assert (
             'decomposition_model' in transform.keys()
@@ -214,8 +215,8 @@ def validate_config(config: pd.DataFrame) -> None:
             'multiplicative'
         ]
         assert len(set([transform['decomposition_model']]) - set(valid_decoms)) == 0, \
-               f"{path}'decomposition_model' value must only contain the following: " + \
-               f"{valid_decoms}."
+            f"{path}'decomposition_model' value must only contain the " + \
+            f"following: {valid_decoms}."
         # Validate variable <standardize>
         assert (
             'standardize' in transform.keys()

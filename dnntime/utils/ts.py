@@ -1,10 +1,9 @@
 import numpy as np
-from typing import Tuple
 
 
 class timesteps:
 
-    def __init__(self, freq: str):
+    def __init__(self, freq: str) -> None:
         """
         Initializes timesteps class, which can output a number of timesteps with
         ease given the desired period duration in text. Contains mapping of num
@@ -12,7 +11,7 @@ class timesteps:
 
         Parameters
         ----------
-        freq : The time-series interval, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases 
+        freq : The time-series interval, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
 
         """
         map = {'s': 1,
@@ -54,7 +53,7 @@ class timesteps:
         self.YEAR = int(year) if year >= 1 else np.NaN
 
 
-def interval_to_freq(time_interval: str) -> Tuple[str, int]:
+def interval_to_freq(time_interval: str) -> str:
     """
     Convert the natural language-based time period into freq char in order to
     standardize user input.
@@ -65,7 +64,7 @@ def interval_to_freq(time_interval: str) -> Tuple[str, int]:
 
     Returns
     -------
-    freq : Appropriate frequency char, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases 
+    freq : Appropriate frequency char, see: https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#offset-aliases
 
     """
     time_interval = time_interval.strip().lower()
@@ -112,7 +111,7 @@ def period_to_timesteps(period: str, freq: str) -> int:
     ts = timesteps(freq)
     steps = 0
     if period == '':
-        steps = steps  # if period is not passed in, then leave steps as 0 
+        steps = steps  # If period is not passed in, then leave steps as 0
     elif period in ['seconds', 'second', 'sec', 's']:
         steps = ts.SEC
     elif period in ['minutes', 'minute', 'min', 't']:

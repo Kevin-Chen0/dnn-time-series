@@ -9,9 +9,9 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 
 class GRUWrapper:
 
-    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1, 
-                 n_unit: int = 64, d_rate: int = 0.15, optimizer: str = 'adam',
-                 loss: str = "mse"):
+    def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1,
+                 n_unit: int = 64, d_rate: float = 0.15, optimizer: str = 'adam',
+                 loss: str = "mse") -> None:
         """
         Wrapper that abstracts the underlying GRU Model in order to better
         decouple the actual model specification from DNN package execution.
@@ -39,8 +39,8 @@ class GRUWrapper:
 
         Parameters
         ----------
-        X_train : Training set with predictor columns used to fit the model. 
-        y_train : Training set with the target column used to fit the model. 
+        X_train : Training set with predictor columns used to fit the model.
+        y_train : Training set with the target column used to fit the model.
         n_epoch : Num of passovers over the training set.
         n_batch : Batch size, or set of N data-points.
         verbose : Whether or not to display fit status, 1 is yes and 0 is no.
@@ -52,8 +52,8 @@ class GRUWrapper:
         end_time = time.time()
         self.run_time = end_time - start_time
 
-    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse', 
-                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float, float]:
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray, score_type: str = 'rmse',
+                 verbose: int = 0) -> Tuple[Sequential, np.ndarray, float]:
         """
         Wraps the GRU model's forecast of the test set and evaluation of its
         accuracy into one function.
@@ -85,13 +85,13 @@ class GRUWrapper:
         print(f"MAPE Score: {round(mape, 4)}")
         print(f"RMSE Score: {round(rmse, 4)}")
         print(f"Total Training Time: {round(self.run_time/60, 2)} min")
-    
+
         return self.gru_model, gru_pred, rmse
 
 
 def VanillaGRU(n_input: int, n_output: int, n_unit: int, n_feature: int) -> Sequential:
     """
-    A basic version of the GRU model without any "bells and whistles". 
+    A basic version of the GRU model without any "bells and whistles".
 
     Parameters
     ----------
