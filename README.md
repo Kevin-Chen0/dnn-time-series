@@ -25,4 +25,4 @@ cd example
 
 Step 4) Open [local_run.ipynb](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_run.ipynb) and proceed to run all. It will use [local_config.yaml](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_config.yaml) as parameters to customize the procedures at runtime. If the latest `dnntime` (v0.3.9.3) is already installed, you do not need to reinstall it again.
 
-**NOTE:** It is highly recommended to run this package using a GPU, such as on Google Colab. Although CPU may work on small-scale datasets of < 10,000 samples, it may cause performance delay on any dataset larger than that.
+**NOTE:** It is highly recommended to run this package using a GPU, such as on Google Colab. Although CPU may work on small-scale datasets of < 10,000 samples, it may encounter encounter performance issue on any dataset larger than that, including the example datasets found here.
