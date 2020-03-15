@@ -7,8 +7,10 @@ Turnkey and modular deep learning predictive modeling package for time-series da
 
 Step 1) Create and activate new env using `pipenv` or `conda` with Python 3.6 or higher. Here, the env is named `dts`.
 
-`conda create -n dts python=3.6`
-`conda activate dts`
+```
+conda create -n dts python=3.6
+conda activate dts
+```
 
 Step 2) Pip install `dnntime` package. It will automatically install or update the dependent packages.
 
