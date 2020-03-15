@@ -23,7 +23,4 @@ svn export https://github.com/Kevin-Chen0/dnn-time-series.git/trunk/example
 cd example
 ```
 
-Step 4) 
-
-
-* [Dynamic Programming](https://github.com/udacity/deep-reinforcement-learning/tree/master/dynamic-programming): Implement Dynamic Programming algorithms such as Policy Evaluation, Policy Improvement, Policy Iteration, and Value Iteration. 
+Step 4) Open [local_run.ipynb](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_run.ipynb) and proceed to run all. It will use [local_config.yaml](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_config.yaml) as parameters to customize the procedures at runtime.
