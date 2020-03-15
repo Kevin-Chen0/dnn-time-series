@@ -1,0 +1,46 @@
+# Config template to input parameters into dnntime
+extract:
+    file_path: 'energy_dataset.csv'
+    delineator: ','
+    datetime_column: 'time'
+    target_column: 'total load actual'
+preprocess:
+    univariate: True
+    # univariate: False
+    time_interval: 'hourly'
+    auto_clean:  # this entire block can be omitted if 'auto_clean' is not needed
+        timezone: 'Europe/Madrid'
+        allow_negatives: True  # set to Fase if negative values are prohibited, hence set to NaN
+        all_numeric: True  # convert entire DataFrame into float64 (if not already done so)
+        nan_fill_type: 'linear'  # leave '' to not fill, see: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.interpolate.html
+        output_type: 'reg'  # regression 'reg' or classication 'class'
+analyze:
+    title: 'PJME Regional Power Demand Time-Series'
+    x_label: 'Datetime'
+    y_label: 'Total Demand (MW)'
+    confidence_interval: 0.95
+transform:
+    steps: ['box-cox', 'deseasonalize']  # 'box-cox', 'yeo-johnson', 'deseasonalize'
+    # steps: ['yeo-johnson']
+    decomposition_model: 'additive'
+    standardize: True
+supervise:
+    training_period: 'biweek'  # walk-forward validation input timesteps
+    forecast_period: 'day'  # walk-forward validation output timesteps
+    validation_set:  'biweek'  # size of the validation set, taken from period prior to 
+    test_set: 'month'  # size of the test set, taken from the last <input> of dataset
+    max_gap: 0.01
+dnn:
+    enable_gpu: True
+    model_type: 'all'
+    epochs: 10
+    batch_size: 768
+    number_units: 128   # number of units per layer
+    dropout_rate: 0.15   # dropout rate
+    optimizer: 'adam'
+    objective_function: 'mse'  # the loss value minimized by the dnn model
+    verbose: 1     # description for model 'fit' and 'evaluate'
+evaluate:
+    score_type: 'rmse'
+meta:
+    user_interface: 'notebook'  # either 'console' (default) or 'notebook'

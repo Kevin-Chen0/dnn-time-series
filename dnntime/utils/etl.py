@@ -34,10 +34,10 @@ def load_data(data: Union[str, pd.DataFrame], dt_col: str, deln: str = ','
             df_load = pd.read_csv(data, index_col=dt_col, parse_dates=True, sep=deln)
         except FileNotFoundError:
             print("File could not be loaded. Check the path or filename and try again")
-            return
+            return None
         except ValueError:
             print("Load failed. Please specify ts_column= and target=, or set dt_index=False.")
-            return
+            return None
         print(f"    - File loaded successfully. Shape of dataset = {df_load.shape}")
     # Else if input data is already in DatFrame format
     elif isinstance(data, pd.DataFrame):

@@ -269,13 +269,20 @@ def validate_config(config: pd.DataFrame) -> None:
     if 'dnn' in config.keys():
         dnn = config['dnn']
         path = "'dnn'->"
+        # Validate variable <gpu>
+        assert (
+            'enable_gpu' in dnn.keys()
+        ), f"{path}'enable_gpu' key is not found in the config file."
+        assert isinstance(
+            dnn['enable_gpu'], bool
+        ), "'enable_gpu' value must be a bool type."
         # Validate variable <model>
         assert (
             'model_type' in dnn.keys()
         ), f"{path}'model_type' key is not found in the config file."
         assert isinstance(
             dnn['model_type'], str
-        ), "'model_type' value must be an str type."
+        ), "'model_type' value must be a str type."
         # Validate variable <epochs>
         assert (
             'epochs' in dnn.keys()
@@ -310,14 +317,14 @@ def validate_config(config: pd.DataFrame) -> None:
         ), f"{path}'optimizer' key is not found in the config file."
         assert isinstance(
             dnn['optimizer'], str
-        ), "'optimizer' value must be an str type."
+        ), "'optimizer' value must be a str type."
         # Validate variable <loss>
         assert (
             'objective_function' in dnn.keys()
         ), f"{path}'objective_function' key is not found in the config file."
         assert isinstance(
             dnn['objective_function'], str
-        ), "'objective_function' value must be an str type."
+        ), "'objective_function' value must be a str type."
         # Validate <verbose>
         assert (
             'verbose' in dnn.keys()

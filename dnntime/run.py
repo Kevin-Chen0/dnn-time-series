@@ -2,6 +2,7 @@
 import art
 import pandas as pd
 import operator
+import os
 import time
 import yaml
 import warnings
@@ -456,6 +457,7 @@ def run_package(
     try:
         # Initializing immutable config variables for STEP 7) and beyond
         dnn = config['dnn']
+        gpu = dnn['enable_gpu']
         model_type = dnn['model_type']
         n_epoch = dnn['epochs']
         n_batch = dnn['batch_size']
@@ -468,10 +470,14 @@ def run_package(
         evaluate = config['evaluate']
         score_type = evaluate['score_type']
 
-        if len(tf.config.list_physical_devices('GPU')) > 0:
-            print("GPU is enabled.")
+        physical_devices = tf.config.list_physical_devices('GPU') 
+        if len(physical_devices) == 0:
+            print("GPU cannot be physically found, running on CPU...")    
+        elif not gpu:
+            tf.config.set_visible_devices([], 'GPU')
+            print("GPU is disabled by user, running on CPU...")
         else:
-            print("Running on CPU as GPU is not enabled.")
+            print("GPU is enabled, running on GPU...")
 
         # Store all of the data ETL checkpoints in a dict that will be returned
         model_dict = CheckpointDict('model')
