@@ -23,4 +23,4 @@ svn export https://github.com/Kevin-Chen0/dnn-time-series.git/trunk/example
 cd example
 ```
 
-Step 4) Open [local_run.ipynb](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_run.ipynb) and proceed to run all. It will use [local_config.yaml](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_config.yaml) as parameters to customize the procedures at runtime.
+Step 4) Open [local_run.ipynb](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_run.ipynb) and proceed to run all. It will use [local_config.yaml](https://github.com/Kevin-Chen0/dnn-time-series/blob/master/example/local_config.yaml) as parameters to customize the procedures at runtime. If the latest `dnntime` (v0.3.9.3) is already installed, you do not need to install it again.
