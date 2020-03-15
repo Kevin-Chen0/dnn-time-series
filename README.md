@@ -2,9 +2,12 @@
 Turnkey and modular deep learning predictive modeling package for time-series data. It allows for univarate and multivariate time-series as well as single and multi-step forecasts. DNN models includes RNNs, LSTMs, GRUs, CNNs, hybrids, and more.
 
 
+
 ### Quick start
 
-Step 1)
+Step 1) Create a new env using `pipenv` or `conda` with Python 3.6 or higher. In this example, the env name is `dts`.
+
+`conda create -n dts python=3.6 && conda activate dts`
 
 # Deep Reinforcement Learning Nanodegree
 
