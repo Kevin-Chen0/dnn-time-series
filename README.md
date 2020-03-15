@@ -14,12 +14,14 @@ conda activate dts
 
 Step 2) Pip install `dnntime` package. It will automatically install or update the dependent packages.
 
-`pip install dnntime`
+```pip install dnntime```
 
 Step 3) In your working directory, download the example directory from this repo and `cd` into it.
 
-`svn export https://github.com/Kevin-Chen0/dnn-time-series.git/trunk/example`
-`cd example`
+```
+svn export https://github.com/Kevin-Chen0/dnn-time-series.git/trunk/example
+cd example
+```
 
 Step 4) 
 
