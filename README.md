@@ -1,7 +1,10 @@
-# dnn-time-series
+# Deep Neural Networks (DNN) for time-series data
 Turnkey and modular deep learning predictive modeling package for time-series data. It allows for univarate and multivariate time-series as well as single and multi-step forecasts. DNN models includes RNNs, LSTMs, GRUs, CNNs, hybrids, and more.
 
 
+### Quick start
+
+Step 1)
 
 # Deep Reinforcement Learning Nanodegree
 
