@@ -7,6 +7,8 @@ from typing import Union, Tuple
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, power_transform
 from statsmodels.tsa.seasonal import seasonal_decompose
 from tscv import gap_train_test_split
+# Timesteps
+from .ts import interval_to_freq
 
 
 def load_data(data: Union[str, pd.DataFrame], dt_col: str, deln: str = ','
@@ -47,13 +49,14 @@ def load_data(data: Union[str, pd.DataFrame], dt_col: str, deln: str = ','
     return df_load
 
 
-def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
-               str = 'H', allow_neg: bool = True, all_num: bool = False, fill:
+def clean_data(df: pd.DataFrame, target: str, time_interval: str, timezone:
+               str = '', allow_neg: bool = True, all_num: bool = False, fill:
                str = 'linear', learning_type: str = 'reg') -> pd.DataFrame:
     """
     Cleans the input dataframe, which contains the following steps:
         1) Sort DateTimeIndex is asc order just in case it hasn't been done.
         2) Check no duplicate time-series point, otherwise, keep only first.
+        3) Get freq based on the user-specified time interval.
         3) Add freq to time-series col or index if it doesn't exist.
         4) Convert all cols in DataFrame into float64 and removing any special char prior.
         5) Convert only target col type to float64 if not already done by all_num.
@@ -66,6 +69,7 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
     ----------
     df : The pd.DataFrame to be cleaned. Can be either univariate or multivariate.
     target : The target column name of df.
+    time_interval : The time period between a data point and its adjacent one.
     timezone : The timezone of df is specified. The default is '' for no timezone.
     as_freq : The frequency char of df. Can be obtained by interval_to_freq() in ts.py.
     allow_neg : Whether to permit allow negative numbers or not. The default is True.
@@ -90,7 +94,10 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
         print("    - WARNING: there were duplicate times! Kept only one and rest are discarded.")
     else:
         print("    - Checked that there are no duplicate times.")
-    # 3) Add freq to time-series col or index if it doesn't exist
+    # 3) Get freq based on the user-specified time interval.
+    freq = interval_to_freq(time_interval)
+    print(f"    - Frequency has been set to {freq}.\n")
+    # 4) Add freq to time-series col or index if it doesn't exist
     tz_offset = 0
     if timezone != '':
         tz = datetime.datetime.now(pytz.timezone(timezone))
@@ -98,14 +105,14 @@ def clean_data(df: pd.DataFrame, target: str, timezone: str = '', as_freq:
     if not isinstance(df_clean.index, pd.DatetimeIndex):
         df_clean.index = pd.to_datetime(df_clean.index, utc=True)
     if df_clean.index.freq is None:
-        f_idx = pd.date_range(start=df_clean.index.min(), end=df_clean.index.max(), freq=as_freq) \
-                  .tz_localize(None)
+        f_idx = pd.date_range(start=df_clean.index.min(), end=df_clean.index.max(), 
+                              freq=freq).tz_localize(None)
         # set_index if current index and new freq indexes have same len, reindex otherwise
         if len(df_clean) == len(f_idx):
             df_clean.set_index(f_idx, inplace=True)
         else:
             df_clean = df_clean.reindex(f_idx)
-        print(f"    - Added freq '{as_freq}' to DateTimeIndex.")
+        print(f"    - Added freq '{freq}' to DateTimeIndex.")
     if tz_offset != 0:
         df_clean.index = df_clean.index.shift(tz_offset)
         print("    - Removed timezone by converting to UTC and then reshifting back. ")

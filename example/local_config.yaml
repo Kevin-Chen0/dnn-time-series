@@ -1,6 +1,6 @@
 # Config template to input parameters into dnntime
 extract:
-    file_path: 'datasets/energy_dataset.csv'
+    file_path: 'datasets/kaggle/energy_dataset.csv'
     delineator: ','
     datetime_column: 'time'
     target_column: 'total load actual'

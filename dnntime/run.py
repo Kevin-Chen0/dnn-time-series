@@ -7,15 +7,20 @@ import time
 import yaml
 import warnings
 warnings.filterwarnings("ignore")
-
-import tensorflow as tf
-from tensorflow import keras
-from collections import defaultdict
-from typing import DefaultDict, Dict, Tuple, Union
-from IPython.display import display, HTML
+from typing import DefaultDict, Dict, Tuple
 
 #################################################
 
+# Tests
+from .tests import config_test as test
+# Blocks
+from .blocks import (
+    ETLBlock,
+    EDABlock,
+    ModelBlock,
+    CheckpointDict
+)
+"""
 # Models
 from .models import (
     RNNWrapper,
@@ -23,96 +28,13 @@ from .models import (
     GRUWrapper,
     ConvLSTMWrapper,
 )
-# Tests
-from .tests import validate_config
 # Utils
 from .utils.etl import load_data, clean_data
 from .utils.etl import log_power_transform, decompose, split_data
 from .utils.ts import interval_to_freq, period_to_timesteps
 from .utils.eda import ts_plot, ets_decomposition_plot, acf_pacf_plot, \
                        adf_stationary_test
-
-
-class CheckpointDict:
-
-    def __init__(self, cp_type: str) -> None:
-        """
-        CheckpointDict is a custom class that stores all of the checkpoints or
-        snapshots of either the data or models. Its internal defaultdict is returned
-        in the run_package() function to be used for later analyses or debugging.
-
-        Parameters
-        ----------
-        cp_type : Checkpoint type. Options are 'data' or 'model'.
-
-        """
-        self.dict = defaultdict(dict)
-        self.type = cp_type
-        if self.type == 'data':
-            self.counter = 0
-        else:
-            self.counter = 1
-
-    def save(self, obj: Union[pd.DataFrame, keras.Sequential], name: str) -> None:
-        """
-        Saves the inputted obj, whether data (pd.DataFrame or np.ndarray format)
-        or model (keras.Sequential format).
-
-        Parameters
-        ----------
-        obj : The actual data or model object.
-        name : The key used to lookup this obj in the underlying defaultdict.
-
-        """
-        new_key = f'{self.counter}) {name}'
-        self.dict[new_key] = obj
-        if isinstance(obj, pd.DataFrame):
-            print(f"\n--> {name} {self.type} saved in {self.type}"
-                  f"_dict[{new_key}]. See head below:")
-            display(HTML(obj.head().to_html()))
-            print("\n    See tail below:")
-            display(HTML(obj.tail().to_html()))
-            print()
-        else:
-            print(f"\n--> {name} {self.type} saved in {self.type}"
-                  f"_dict[{new_key}].\n")
-        self.counter += 1
-
-    def get(self) -> DefaultDict[str, Dict]:
-        """
-        Retrieves the internal defaultdict.
-
-        Returns
-        -------
-        self.dict : the internal defaultdict that store of obj checkpoints
-
-        """
-        return self.dict
-
-
-def print_bold(
-    text: str, ui: str = 'console', n_before: int = 0, n_after: int = 0
-) -> None:
-    """
-    A global function that prints out a given text in bold format. It uses
-    two different fonts depending on whether the user interface or ui is a
-    'console' or 'notebook'.
-
-    Parameters
-    ----------
-    text : The text to printed out.
-    ui : Either 'console' (default) or 'notebook'.
-    n_before : Number of newlines added before the actual text for formatting.
-    n_after : Number of newlines added after the actual text for formatting.
-
-    """
-
-    if ui == 'notebook':
-        nl = "<br>"
-        display(HTML(f"{nl*n_before}<b>{text}</b>{nl*(n_after+1)}"))
-    elif ui == 'console':
-        nl = "\n"
-        print(f"\033[1m{nl*n_before}{text}{nl*n_after}\033[0m")
+"""
 
 
 def run_package(
@@ -141,20 +63,7 @@ def run_package(
 
     start_time = time.time()
 
-    # Introductory texts
-    art.tprint("Running   DNN\ntime-series\npackage...")
-    print("-------------------------------------------------------------------")
-    print("-------------------------------------------------------------------\n")
-    print("SUMMARY STEPS:")
-    print("    STEP 1) Extract Data from Source")
-    print("    STEP 2) Preprocessing I (Cleaning)")
-    print("    STEP 3) EDA I (General)")
-    print("    STEP 4) EDA II (Time-Series Stats)")
-    print("    STEP 5) Preprocessing II (Transformations)")
-    print("    STEP 6) Preprocessing III (Make Supervised)")
-    print("    STEP 7) Model Search (DNNs)")
-    print("    STEP 8) Model Results Output")
-
+    # Load config YAML file
     assert config_file.endswith(
         ".yaml"
     ), "Config YAML file not found. Please check filepath."
@@ -166,19 +75,64 @@ def run_package(
     except FileNotFoundError as e:
         print(e)
         return None, None
-
     # Check the config dict to ensure it passes all of the assertions
-    validate_config(config)
+    test.validate_config(config)
     # Initializing meta config variable(s) prior to STEPS
     try:
         ui = config['meta']['user_interface']
-    except KeyError:
-        ui = 'console'
+        space = "&nbsp" if ui == 'notebook' else " "
+        dt_col = config['meta']['datetime_column']
+        target = config['meta']['target_column']
+    except KeyError as e:
+        print(e)
+        return None, None
+    # Remove 'meta' key as it is unneeded
+    del config['meta']
+    # Initialize STEP conuter
+    step_counter = 1
+    
+    # Introductory texts
+    art.tprint("Running   DNN\ntime-series\npackage...")
+    print("-------------------------------------------------------------------")
+    print("-------------------------------------------------------------------\n")
+    print("SUMMARY STEPS:")
+    for key in config.keys():
+        print(f"    STEP {step_counter}) {config[key]['description']}")
+        step_counter += 1
+
+    # Reset counter
+    step_counter = 1
+    # Add options for space
     space = "&nbsp" if ui == 'notebook' else " "
-    # Store all of the data ETL checkpoints in a dict that will be returned
+    # Store all of the data and models checkpoints in a dict to be returned
     data_dict = CheckpointDict('data')
+    model_dict = CheckpointDict('model')
+    # Add additional parameter from the 'meta' block initially
+    params = {'ui': ui,
+              'space': space,
+              'dt_col': dt_col,
+              'target': target,
+              'step_number': step_counter
+              }
+
+    # Now do each step one by one
+    for key in config.keys():
+        params['key'] = key
+        if 'etl' in key:
+            data_dict, params = ETLBlock(data_dict, params).run_block(config[key])
+        elif 'eda' in key:
+            params = EDABlock(data_dict, params).run_block(config[key])
+        elif 'model' in key:
+            model_dict, params = ModelBlock(data_dict, params).run_block(config[key])
+        else:
+            print(f"{key} is not 'etl', 'eda', or 'model'. Stopping program "
+                  "now, please fix.")
+            return data_dict.get(), model_dict.get()
+
+    return data_dict.get(), model_dict.get()
 
 
+"""
     print("\n\n-------------------------------------------------------------------")
     print_bold(f"STEP 1) {space}Extract Data from Source", ui)
     print("-------------------------------------------------------------------\n")
@@ -562,4 +516,4 @@ def run_package(
               )
         return data_dict.get(), None
 
-    return data_dict.get(), model_dict.get()
+"""
