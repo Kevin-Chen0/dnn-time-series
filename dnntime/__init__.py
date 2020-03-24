@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # ============================================================================
-#     Deep Time-Series Early Alpha v0.3.9
+#     Deep Time-Series Early Alpha v0.4.0
 #     Python v3.6+
 #     Created by Kevin R. Chen
 #     Licensed under Apache License v2

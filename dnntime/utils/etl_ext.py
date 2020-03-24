@@ -101,7 +101,7 @@ def clean_data(df: pd.DataFrame, target: str, time_interval: str, timezone:
     if not isinstance(df_clean.index, pd.DatetimeIndex):
         df_clean.index = pd.to_datetime(df_clean.index, utc=True)
     if df_clean.index.freq is None:
-        f_idx = pd.date_range(start=df_clean.index.min(), end=df_clean.index.max(), 
+        f_idx = pd.date_range(start=df_clean.index.min(), end=df_clean.index.max(),
                               freq=freq).tz_localize(None)
         # set_index if current index and new freq indexes have same len, reindex otherwise
         if len(df_clean) == len(f_idx):
@@ -114,12 +114,12 @@ def clean_data(df: pd.DataFrame, target: str, time_interval: str, timezone:
         print("    - Removed timezone by converting to UTC and then reshifting back. ")
     # 4) Convert all cols in DataFrame into float64 and removing any special char prior
     if all_num:
-        df_clean.apply(lambda x: x.astype(str).replace('[^\d\.]', '') \
+        df_clean.apply(lambda x: x.astype(str).replace('[^\d\.]', '')
                                               .astype(np.float64))
     # 5) Convert only target col type to float64 if not already done by all_num
     if learning_type == 'reg' and df_clean[target].dtype.kind != 'f' and not all_num:
         df_clean[target] = df_clean[target].astype(str).replace('[^\d\.]', '') \
-                                           .astype(np.float64)
+                                                       .astype(np.float64)
         print(f"    - Converted target={target} col to float64 type.")
     # 6) Replace any negative number as NaN if target negative numbers are not allowed
     if not allow_neg:

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
-import pytz
 import re
 from typing import Dict
 
@@ -21,7 +19,7 @@ def validate_config(config: Dict) -> None:
     valid_roots = {'eda', 'etl', 'meta', 'model'}
     # Assert all root keys are subset of valid roots, otherwise process will fail.
     assert len(root_keys - valid_roots) == 0, f"{list(config.keys())} keys " + \
-           f"must have only the following prefixes: {valid_roots}."
+        f"must have only the following prefixes: {valid_roots}."
 
     # TEST 2) Validate 'meta' key ############################################
     assert (

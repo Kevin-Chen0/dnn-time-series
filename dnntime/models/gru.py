@@ -147,7 +147,7 @@ def StackedGRU(n_input, n_output, n_unit, n_feature, d_rate=0.5):
     return model
 
 
-def CustomGRU(n_input: int, n_output: int, n_layer: int, n_unit: int, 
+def CustomGRU(n_input: int, n_output: int, n_layer: int, n_unit: int,
               n_feature: int, d_rate: float = 0.5) -> Sequential:
     """
     A customized, n-layer deep GRU model that includes dropout rates.
@@ -176,7 +176,7 @@ def CustomGRU(n_input: int, n_output: int, n_layer: int, n_unit: int,
                   )
         model.add(Dropout(d_rate))
     model.add(Dense(n_output))
-    
+
     print("Stacked GRU model summary:")
     model.summary()
     return model

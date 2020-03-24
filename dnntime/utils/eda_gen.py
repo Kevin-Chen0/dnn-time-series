@@ -13,7 +13,7 @@ from typing import List, Tuple
 
 
 def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
-            x_label: str = "Date", width: int = 10, height: int = 4, line_width: 
+            x_label: str = "Date", width: int = 10, height: int = 4, line_width:
             float = 0.1, figsize: Tuple[int, int] = (20, 8), plotly: bool = False
             ) -> None:
     """
@@ -34,7 +34,7 @@ def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str
     plotly: Whether to use plotly as viz or matplotlib+seaborn. The default is
             False, or using matplotlib+seaborn and it is more portable.
 
-    """    
+    """
     if plotly:
         if isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex):
             df = df.copy()  # prevents from modifying original df
@@ -54,14 +54,14 @@ def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str
                           ),
                           xaxis_title=x_label,
                           yaxis_title=y_label)
-        fig.show()
+        fig.show();
     else:
         ax = df.plot(legend=True, figsize=figsize)
         plt.title(title, fontsize=12, fontweight='bold')
         ax.autoscale(axis='x', tight=True)
-        ax.set(xlabel=x_label, ylabel=y_label);
-        ax.yaxis.set_major_formatter(formatter);
-        plt.show()
+        ax.set(xlabel=x_label, ylabel=y_label)
+        ax.yaxis.set_major_formatter(formatter)
+        plt.show();
 
     print()
 

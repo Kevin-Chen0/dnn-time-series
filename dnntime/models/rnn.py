@@ -147,7 +147,7 @@ def StackedRNN(n_input: int, n_output: int, n_unit: int, n_feature: int,
     return model
 
 
-def CustomRNN(n_input: int, n_output: int, n_layer: int, n_unit: int, 
+def CustomRNN(n_input: int, n_output: int, n_layer: int, n_unit: int,
               n_feature: int, d_rate: float = 0.5) -> Sequential:
     """
     A customized, n-layer deep RNN model that includes dropout rates.
@@ -176,7 +176,7 @@ def CustomRNN(n_input: int, n_output: int, n_layer: int, n_unit: int,
                   )
         model.add(Dropout(d_rate))
     model.add(Dense(n_output))
-    
+
     print("Stacked RNN model summary:")
     model.summary()
     return model

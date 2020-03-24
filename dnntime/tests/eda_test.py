@@ -23,8 +23,8 @@ def validate_eda(key_name: str, config: Dict) -> None:
     valid_edas = {'general', 'statistical'}
     # Assert all eda keys are subset of valid edas, otherwise process will fail.
     assert len(eda_keys - valid_edas) == 0, "EDA config keys must contain " + \
-           f"only the following subkeys: {valid_edas}. '{key_name}' " + \
-           f"contains the following: {list(config.keys())}."
+        f"only the following subkeys: {valid_edas}. '{key_name}' " + \
+        f"contains the following: {list(config.keys())}."
 
 
 def validate_general(key_name: str, gen_conf: Dict, params: Dict) -> None:
@@ -93,7 +93,7 @@ def validate_general(key_name: str, gen_conf: Dict, params: Dict) -> None:
             gen_conf_figsize[1], int
         ), f"{path}'figsize[1]' value must be an int type."
 
-   # TEST 6) Validate 'plotly' sub-config key (optional) #####################
+    # TEST 6) Validate 'plotly' sub-config key (optional) ####################
     if 'plotly' in gen_conf.keys():
         assert isinstance(
             gen_conf['plotly'], bool
@@ -155,7 +155,7 @@ def validate_statistical(key_name: str, stat_conf: Dict, params: Dict) -> None:
         stat_conf['y_label'], str
     ), f"{path}'y_label' value must be a str type."
 
-   # TEST 5) Validate 'confidence_interval' sub-config key ###################
+    # TEST 5) Validate 'confidence_interval' sub-config key ##################
     assert (
         'confidence_interval' in stat_conf.keys()
     ), f"{path}'confidence_interval' key is not found in the config file."
@@ -163,7 +163,7 @@ def validate_statistical(key_name: str, stat_conf: Dict, params: Dict) -> None:
         stat_conf['confidence_interval'], float
     ), f"{path}'confidence_interval' value must be a float type."
 
-    # TEST 6) Validate 'figsize' sub-config key (optional) ####################
+    # TEST 6) Validate 'figsize' sub-config key (optional) ###################
     if 'figsize' in stat_conf.keys():
         stat_conf_figsize = ast.literal_eval(stat_conf['figsize'])
         assert isinstance(
@@ -177,7 +177,7 @@ def validate_statistical(key_name: str, stat_conf: Dict, params: Dict) -> None:
             stat_conf_figsize[1], int
         ), f"{path}'figsize[1]' value must be an int type."
 
-   # TEST 7) Validate 'plotly' sub-config key (optional) #####################
+    # TEST 7) Validate 'plotly' sub-config key (optional) ####################
     if 'plotly' in stat_conf.keys():
         assert isinstance(
             stat_conf['plotly'], bool

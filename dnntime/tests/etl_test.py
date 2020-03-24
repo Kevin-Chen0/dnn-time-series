@@ -21,8 +21,8 @@ def validate_etl(key_name: str, config: Dict) -> None:
     valid_etls = {'extract', 'univariate', 'clean', 'transform', 'supervise'}
     # Assert all etl keys are subset of valid etls, otherwise process will fail.
     assert len(etl_keys - valid_etls) == 0, "ETL config keys must contain " + \
-           f"only the following subkeys: {valid_etls}. '{key_name}' " + \
-           f"contains the following: {list(config.keys())}."
+        f"only the following subkeys: {valid_etls}. '{key_name}' " + \
+        f"contains the following: {list(config.keys())}."
 
 
 def validate_datetime_target(params: Dict) -> None:
@@ -122,7 +122,7 @@ def validate_univariate(key_name: str, uni_conf: bool, params: Dict) -> None:
     assert params['key'] != '', "'key' value in param cannot be blank."
     path = f"'{params['key']}'->"
 
-   # TEST 2) Validate 'univariate' sub-config key ###########################
+    # TEST 2) Validate 'univariate' sub-config key ###########################
     assert isinstance(
         uni_conf, bool
     ), f"{path}'{key_name}' value must be a bool type."

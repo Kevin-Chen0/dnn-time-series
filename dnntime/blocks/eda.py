@@ -34,7 +34,7 @@ class EDABlock(Block):
         """
         Executes the EDABlock function on the data_dict based on the user's config
         YAML file as well preexisting params from initialization. Unlike ETLBlock,
-        the EDABlock does not modify or transform the data but rather plot graphs 
+        the EDABlock does not modify or transform the data but rather plot graphs
         or output statistical tests for the user to see. It also optionally output
         statistical params that subsequent Blocks can use. Therefore, neither
         data_dict nor model_dict should be modified by an EDABlock execution.
@@ -79,7 +79,7 @@ class EDABlock(Block):
         Returns
         -------
         params : Any plot output params could be useful in subsequent Blocks.
-        
+
         """
         # VALIDATE necessary general parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \
@@ -137,7 +137,7 @@ class EDABlock(Block):
         Returns
         -------
         params : Any stat output params could be useful for subsequent Blocks.
-        
+
         """
         # VALIDATE necessary statistical parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \

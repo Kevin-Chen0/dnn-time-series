@@ -75,7 +75,7 @@ class Block:
         Block is the most basic building module of the dnntime.
         It structures how each STEP is executed, its input parameters from prior
         Block, and the outputs that can be used to subsequent Block. dnntime's
-        run_package() is basically made up of a "chain" or Blocks that is 
+        run_package() is basically made up of a "chain" or Blocks that is
         configured by the user's YAML file. More specific types of Blocks,
         including ETLBlock, ETABlock, and ModelBlock inherit from Block.
 
@@ -99,7 +99,6 @@ class Block:
         Parameters
         ----------
         config: The specified config block from the user YAML file.
-
 
         """
         print("\n\n-------------------------------------------------------------------")

@@ -147,8 +147,8 @@ def StackedLSTM(n_input: int, n_output: int, n_unit: int, n_feature: int,
     return model
 
 
-def CustomLSTM(n_input: int, n_output: int, n_layer: int, n_unit: int, 
-              n_feature: int, d_rate: float = 0.5) -> Sequential:
+def CustomLSTM(n_input: int, n_output: int, n_layer: int, n_unit: int,
+               n_feature: int, d_rate: float = 0.5) -> Sequential:
     """
     A customized, n-layer deep LSTM model that includes dropout rates.
 
@@ -176,7 +176,7 @@ def CustomLSTM(n_input: int, n_output: int, n_layer: int, n_unit: int,
                   )
         model.add(Dropout(d_rate))
     model.add(Dense(n_output))
-    
+
     print("Stacked LSTM model summary:")
     model.summary()
     return model

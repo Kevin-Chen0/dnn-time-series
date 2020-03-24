@@ -6,6 +6,6 @@ __author__ = "Kevin R. Chen"
 __description__ = "An end-to-end, modular deep learning package time-series " \
                   "predictive modeling."
 __url__ = "https://github.com/Kevin-Chen0/deep-time-series.git"
-__version__ = "0.3.9.11"
+__version__ = "0.4.0"
 __license__ = "Apache License 2.0"
 __copyright__ = "2020 Kevin R. Chen"

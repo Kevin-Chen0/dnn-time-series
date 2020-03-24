@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import pandas as pd
 import re
 import tensorflow as tf
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 # Blocks base modules
 from .base import Block, CheckpointDict
 # Tests
@@ -52,7 +51,7 @@ class ModelBlock(Block):
         -------
         self.model_dict : The latest model_dict including the specified DNNs models.
         self.params : Any additional generated parameters for subsequent Blocks.
-        
+
         """
         super().run_block(config)
 
@@ -89,13 +88,13 @@ class ModelBlock(Block):
                             name = config[key]['alias']
                     self.model_dict.save(model, name)
             else:
-                print(f"Model has return None, result for sub-block " + \
+                print(f"Model has return None, result for sub-block "
                       f"'{self.params['key']}'->'{key}' is not saved.")
 
         self.params['step_number'] += 1
         return self.model_dict, self.params
 
-    def run_dnn(self, key_name: str, config: Dict) -> Dict:
+    def run_dnn(self, key_name: str, config: Dict) -> Optional[Dict]:
         """
         Model operation that trains and gathers results of either a specified
         DNN model or all DNN models.

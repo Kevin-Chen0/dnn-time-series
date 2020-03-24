@@ -170,7 +170,7 @@ def split_data(data: pd.DataFrame, target: str, n_test: int, n_val: int, n_input
 
 
 def _make_supervised(data: pd.DataFrame, target: str, n_input: int, n_output: int,
-                    n_feature: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+                     n_feature: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Decompose the time-series dataframe into seasonal, trend, and residual
     components using statsmodels. This is used to detrend or deseasonalize

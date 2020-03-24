@@ -42,7 +42,7 @@ class ETLBlock(Block):
             3) Clean: Massage the data, including regarding its DateTimeIndex and
                       NaN data values. See utils.etl_ext.clean_data function.
             4) Transform: Transforming the data in other to make it more digestible
-                          for DNNs models, including deseasonalizing and normalization. 
+                          for DNNs models, including deseasonalizing and normalization.
             5) Supervise: Making the dataset as a supervised learning problem.
                           See utils.etl_trans.split_data function.
 
@@ -70,7 +70,7 @@ class ETLBlock(Block):
                         name = config[key]['alias']
                 self.data_dict.save(data, name)
             else:
-                print(f"Data has return None, result for sub-block " + \
+                print(f"Data has return None, result for sub-block "
                       f"'{self.params['key']}'->'{key}' is not saved.")
             self.substep_counter += 1
 
@@ -121,7 +121,8 @@ class ETLBlock(Block):
 
         return df
 
-    def run_univariate(self, key_name: str, is_univariate: bool) -> pd.DataFrame:
+    def run_univariate(self, key_name: str, is_univariate: bool
+                       ) -> Optional[pd.DataFrame]:
         """
         ETL operation that strips away all other columns so only the data's
         target column remains.
@@ -153,7 +154,7 @@ class ETLBlock(Block):
 
         return df
 
-    def run_clean(self, key_name: str, config: Dict) -> pd.DataFrame:
+    def run_clean(self, key_name: str, config: Dict) -> Optional[pd.DataFrame]:
         """
         ETL operation that massages the data, including setting up its DateTimeIndex
         as well as dealing with NaN or missing values.
@@ -180,7 +181,7 @@ class ETLBlock(Block):
         all_num = config['all_numeric']
         fill = config['nan_fill_type']
         out = config['output_type']
-        ti =  config['time_interval']
+        ti = config['time_interval']
         tz = ''
         if 'timezone' in config:
             tz = config['timezone']
@@ -197,11 +198,11 @@ class ETLBlock(Block):
 
         return df
 
-    def run_transform(self, key_name: str, config: Dict) -> pd.DataFrame:
+    def run_transform(self, key_name: str, config: Dict) -> Optional[pd.DataFrame]:
         """
         ETL operation that transforms the data in other to make it more
         digestible for DNNs models to train on. Types of transformations
-        include seasonal adjustment and/or normalization of data. 
+        include seasonal adjustment and/or normalization of data.
 
         Parameters
         ----------
@@ -258,7 +259,7 @@ class ETLBlock(Block):
         # print()
         return df
 
-    def run_supervise(self, key_name: str, config: Dict) -> Dict:
+    def run_supervise(self, key_name: str, config: Dict) -> Optional[Dict]:
         """
         ETL operation that make the dataset into a supervised learning problem.
         This is usually the final data ETL op before DNN modeling.
@@ -307,8 +308,8 @@ class ETLBlock(Block):
             _orig, _train, _val, _test = split_data(df_curr, target,
                                                     n_test=n_test,  # size of test set
                                                     n_val=n_val,  # size of validation set
-                                                    n_input=n_input,   # input timestep seq
-                                                    n_output=n_output, # output timestep seq
+                                                    n_input=n_input,  # input timestep seq
+                                                    n_output=n_output,  # output timestep seq
                                                     n_feature=n_feature,
                                                     g_min=0,     # min gap ratio
                                                     g_max=max_gap)  # max gap ratio
@@ -323,12 +324,18 @@ class ETLBlock(Block):
                   )
             print(f"    Time-series frequency: '{freq}'.")
             print(f"    Input period: {X.shape[1]} timesteps, or 'bikweek'.")
-            print(f"    Output (forecast) period: {y.shape[1]} timesteps, or 'day'.")
+            print(f"    Output (forecast) period: {y.shape[1]} timesteps, "
+                  "or 'day'."
+                  )
             print(f"    Original dataset: {df_curr.shape[0]} observations.")
             print(f"    Supervised dataset: {X.shape[0]} observations.")
             print(f"    Training dataset: {X_train.shape[0]} observations.")
-            print(f"    Validation dataset: {X_val.shape[0]} observations, or '{val_set}'.")
-            print(f"    Testing dataset: {X_test.shape[0]} observations, or '{test_set}'.")
+            print(f"    Validation dataset: {X_val.shape[0]} observations,"
+                  "or '{val_set}'."
+                  )
+            print(f"    Testing dataset: {X_test.shape[0]} observations, "
+                  "or '{test_set}'."
+                  )
 
             train_prct = len(X_train)/len(X)*100
             val_prct = len(X_val)/len(X)*100
@@ -337,7 +344,8 @@ class ETLBlock(Block):
 
             print("\nSplit %:")
             print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: "
-                  f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
+                  f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%"
+                  )
 
             print("\nDataset shapes:")
             print(f"    Original:")
