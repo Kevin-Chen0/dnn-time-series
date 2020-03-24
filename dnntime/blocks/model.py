@@ -2,7 +2,7 @@
 import pandas as pd
 import re
 import tensorflow as tf
-from typing import Dict
+from typing import Dict, Tuple
 # Blocks base modules
 from .base import Block, CheckpointDict
 # Tests
@@ -19,20 +19,40 @@ from ..models import (
 class ModelBlock(Block):
 
     def __init__(self, data_dict: CheckpointDict, params: Dict) -> None:
-        super().__init__(data_dict, params)
-
-    def run_block(self, config: Dict) -> CheckpointDict:
         """
-
+        ModelBlock inherits from Block. It performs the DNN model training and
+        prediction of the processed time-series data. This is usually the final
+        or penultimate Block of the dnntime run_package, once all the ETL and
+        EDA preprocessing steps have been completed.
 
         Parameters
         ----------
-        config : Dict
+        data_dict: The record of data transformations.
+        params: Any additional parameters passed from the results of previous Blocks.
+
+        """
+        super().__init__(data_dict, params)
+
+    def run_block(self, config: Dict) -> Tuple[CheckpointDict, Dict]:
+        """
+        Executes the ModelBlock function on the data_dict based on the user's
+        config YAML file as well as preexisting params from initialization. It
+        takes the latest data from the input data_dict, trains the specified DNN
+        model(s), and saves these model architecture(s) and result(s) into
+        model_dict. Finally, it returns this newly modified model_dict as well
+        as any supplementary params.
+        Here is the following Model operation:
+            1) Dnn: Trains and get results of the specified DNN model(s).
+
+        Parameters
+        ----------
+        config: The specified config block from the user YAML file.
 
         Returns
         -------
-        df : TYPE
-
+        self.model_dict : The latest model_dict including the specified DNNs models.
+        self.params : Any additional generated parameters for subsequent Blocks.
+        
         """
         super().run_block(config)
 
@@ -75,8 +95,22 @@ class ModelBlock(Block):
         self.params['step_number'] += 1
         return self.model_dict, self.params
 
-    def run_dnn(self, key_name: str, config: Dict) -> pd.DataFrame:
+    def run_dnn(self, key_name: str, config: Dict) -> Dict:
+        """
+        Model operation that trains and gathers results of either a specified
+        DNN model or all DNN models.
 
+        Parameters
+        ----------
+        key_name : The key for this config block, usually as 'dnn'{#num}.
+        config : Specifies the DNN model as well as its hyperparameters.
+
+        Returns
+        -------
+        model_store : The model architectured and results to be stored in the
+                      Block's model_dict.
+
+        """
         # VALIDATE necessary transform parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \
             "run_dnn() needs existing data to run."
@@ -101,7 +135,19 @@ class ModelBlock(Block):
         return model_store
 
     def _run_all_models(self, data_curr: Dict, config: Dict):
+        """
+        Helper function to iteratively run through all DNN models.
 
+        Parameters
+        ----------
+        data_curr : The latest data from data_dict to be trained and tested on.
+        config : Specifies the hyperparameters shared by all the DNN models.
+
+        Returns
+        -------
+        model_all : Stores all DNN model architectures and their predictive results.
+
+        """
         model_all = {}
         model_list = ['rnn', 'lstm', 'gru', 'convlstm']
 
@@ -112,7 +158,21 @@ class ModelBlock(Block):
         return model_all
 
     def _run_custom_model(self, model_type: str, data_curr: Dict, config: Dict):
+        """
+        Helper function to run through a particular DNN model.
 
+        Parameters
+        ----------
+        model_type : The name of the DNN model to run.
+        data_curr : The latest data from data_dict to be trained and tested on.
+        config : Specifies the hyperparameters shared by all the DNN models.
+
+        Returns
+        -------
+        model_store : Stores the specified DNN model architecture and its
+                      predictive results.
+
+        """
         # INITIALIZE transform config variables
         n_epoch = config['epochs']
         n_batch = config['batch_size']

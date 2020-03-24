@@ -5,9 +5,11 @@ from typing import Dict
 
 def validate_model(key_name: str, config: Dict) -> None:
     """
+    Validate the subkeys of this particular Model config block.
 
     Parameters
     ----------
+    key_name : The root key that maps to this EDA config block.
     config : The contents in the config file in DataFrame format.
 
     """
@@ -29,7 +31,16 @@ def validate_model(key_name: str, config: Dict) -> None:
 
 
 def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
+    """
+    Validate the dnn config subblock to be used for ModelBlock dnn operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    dnn_conf : The extract sub-config dict or config['dnn'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()

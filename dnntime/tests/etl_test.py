@@ -6,9 +6,11 @@ from typing import Dict
 
 def validate_etl(key_name: str, config: Dict) -> None:
     """
+    Validate the subkeys of this particular ETL config block.
 
     Parameters
     ----------
+    key_name : The root key that maps to this ETL config block.
     config : The contents in the config file in DataFrame format.
 
     """
@@ -24,7 +26,15 @@ def validate_etl(key_name: str, config: Dict) -> None:
 
 
 def validate_datetime_target(params: Dict) -> None:
+    """
+    Validate datetime and target column names.
 
+    Parameters
+    ----------
+    params : The passed-in param dict that contains the datetime and target
+             column names.
+
+    """
     # TEST 1) Validate 'dt_col' param key ####################################
     path = "'meta'->"
     assert (
@@ -45,10 +55,13 @@ def validate_datetime_target(params: Dict) -> None:
 
 def validate_extract(key_name: str, ext_conf: Dict, params: Dict) -> None:
     """
+    Validate the extract config subblock to be used for ETLBlock extract operation.
 
     Parameters
     ----------
+    key_name : The subkey that maps to this extract subblock.
     ext_conf : The extract sub-config dict or config['extract'].
+    params : Any additional passed-in params including datetime and target cols.
 
     """
     # TEST 1) Validate root 'key' in params ##################################
@@ -88,7 +101,17 @@ def validate_extract(key_name: str, ext_conf: Dict, params: Dict) -> None:
 
 
 def validate_univariate(key_name: str, uni_conf: bool, params: Dict) -> None:
+    """
+    Validate the univariate config subblock to be used for ETLBlock
+    univariate operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    uni_conf : The extract sub-config boolean value or config['univariate'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()
@@ -108,7 +131,16 @@ def validate_univariate(key_name: str, uni_conf: bool, params: Dict) -> None:
 
 
 def validate_clean(key_name: str, cln_conf: Dict, params: Dict) -> None:
+    """
+    Validate the clean config subblock to be used for ETLBlock clean operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    cln_conf : The extract sub-config dict or config['clean'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()
@@ -198,7 +230,16 @@ def validate_clean(key_name: str, cln_conf: Dict, params: Dict) -> None:
 
 
 def validate_transform(key_name: str, tran_conf: Dict, params: Dict) -> None:
+    """
+    Validate the transform config subblock to be used for ETLBlock transform operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    tran_conf : The extract sub-config dict or config['transform'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()
@@ -263,7 +304,16 @@ def validate_transform(key_name: str, tran_conf: Dict, params: Dict) -> None:
 
 
 def validate_supervise(key_name: str, sup_conf: Dict, params: Dict) -> None:
+    """
+    Validate the supervise config subblock to be used for ETLBlock supervise operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    sup_conf : The extract sub-config dict or config['supervise'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()

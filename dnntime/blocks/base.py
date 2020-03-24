@@ -81,10 +81,9 @@ class Block:
 
         Parameters
         ----------
-        data_dict: The recorded data transformation.
+        data_dict: The record of data transformations.
         params: Any additional parameters passed from the results of previous Blocks.
         model_dict: The recorded model architectures, params, and results.
-        cp_type : Checkpoint type. Options are 'data' or 'model'.
 
         """
         self.data_dict = data_dict

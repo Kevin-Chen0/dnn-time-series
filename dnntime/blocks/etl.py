@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 # Blocks base modules
 from .base import Block, CheckpointDict
 # Tests
@@ -15,14 +15,25 @@ from ..utils.ts import period_to_timesteps
 class ETLBlock(Block):
 
     def __init__(self, data_dict: CheckpointDict, params: Dict) -> None:
+        """
+        ETLBlock inherits from Block. It performs any type of data proprocessing
+        including extract, transform, and load (ETL). It takes the pre-existing
+        data_dict, modifies the most current data, and stores the newly modified
+        data back into the data_dict to be returned by run_block.
+
+        Parameters
+        ----------
+        data_dict: The record of data transformations.
+        params: Any additional parameters passed from the results of previous Blocks.
+
+        """
         super().__init__(data_dict, params)
 
-    def run_block(self, config: Dict) -> CheckpointDict:
+    def run_block(self, config: Dict) -> Tuple[CheckpointDict, Dict]:
         """
-        Execute the ELTBlock function on the data_dict and/or model_dict based on
-        the user's config YAML file as well preexisting params from initialization.
-        It modifies the data then adds the newly modified data into the data_dict.
-        It returns this data_dict as well as any supplementary params.
+        Executes the ETLBlock function on the data_dict based on the user's config
+        YAML file as well preexisting params from initialization. It returns the
+        modified data_dict as well as any supplementary params.
         Here are the following ETL operations:
             1) Extract: Load data from a file source into a pd.DataFrame. This is
                         the only op where input data_dict is expected to be empty.
@@ -38,6 +49,11 @@ class ETLBlock(Block):
         Parameters
         ----------
         config: The specified config block from the user YAML file.
+
+        Returns
+        -------
+        self.data_dict : The new data_dict with the modified data saved in it.
+        self.params : Any additional generated parameters for subsequent Blocks.
 
         """
         super().run_block(config)

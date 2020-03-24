@@ -8,9 +8,11 @@ from .etl_test import validate_datetime_target
 
 def validate_eda(key_name: str, config: Dict) -> None:
     """
+    Validate the subkeys of this particular EDA config block.
 
     Parameters
     ----------
+    key_name : The root key that maps to this EDA config block.
     config : The contents in the config file in DataFrame format.
 
     """
@@ -27,10 +29,13 @@ def validate_eda(key_name: str, config: Dict) -> None:
 
 def validate_general(key_name: str, gen_conf: Dict, params: Dict) -> None:
     """
+    Validate the general config subblock to be used for EDABlock general operation.
 
     Parameters
     ----------
+    key_name : The subkey that maps to this extract subblock.
     gen_conf : The extract sub-config dict or config['extract'].
+    params : Any additional passed-in params including datetime and target cols.
 
     """
     # TEST 1) Validate root 'key' in params ##################################
@@ -97,8 +102,18 @@ def validate_general(key_name: str, gen_conf: Dict, params: Dict) -> None:
     validate_datetime_target(params)
 
 
-def validate_statistical(key_name: str, stat_conf: bool, params: Dict) -> None:
+def validate_statistical(key_name: str, stat_conf: Dict, params: Dict) -> None:
+    """
+    Validate the statistical config subblock to be used for EDABlock
+    statistical operation.
 
+    Parameters
+    ----------
+    key_name : The subkey that maps to this extract subblock.
+    stat_conf : The extract sub-config dict or config['statistical'].
+    params : Any additional passed-in params including datetime and target cols.
+
+    """
     # TEST 1) Validate root 'key' in params ##################################
     assert (
         'key' in params.keys()

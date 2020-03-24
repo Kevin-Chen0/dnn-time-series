@@ -17,19 +17,14 @@ class EDABlock(Block):
 
     def __init__(self, data_dict: CheckpointDict, params: Dict) -> None:
         """
-        EDABlock is a Block that performs visual and/or statisically analysis
-        from the input data_dict, typically on the most recent data. Unlike
-        ETLBlock, the EDABlock does not modify or transform the data but rather
-        plot graphs or output statistical tests for the user to see, and/or
-        output statistical params that subsequent Blocks can use. Neither data_dict
-        not model_dict will be affected or mofified by an EDABlock's function.
-        Here are the following EDA operations:
-            1) General: .
-            2) Statistical: .
+        EDABlock inherits from Block. It performs any type of visual and/or
+        statisical analysis of data. It takes the latest data from the input
+        data_dict, plot the data, and print out any time-series statistical
+        information that might be useful for the user.
 
         Parameters
         ----------
-        data_dict: The recorded data transformation.
+        data_dict: The record of data transformations.
         params: Any additional parameters passed from the results of previous Blocks.
 
         """
@@ -37,12 +32,23 @@ class EDABlock(Block):
 
     def run_block(self, config: Dict) -> Dict:
         """
-        Execute the EDABlock function on the data_dict and/or model_dict based on
-        the user's config YAML file as well preexisting params from initialization.
+        Executes the EDABlock function on the data_dict based on the user's config
+        YAML file as well preexisting params from initialization. Unlike ETLBlock,
+        the EDABlock does not modify or transform the data but rather plot graphs 
+        or output statistical tests for the user to see. It also optionally output
+        statistical params that subsequent Blocks can use. Therefore, neither
+        data_dict nor model_dict should be modified by an EDABlock execution.
+        Here are the following EDA operations:
+            1) General: Performs general plots and visualizations.
+            2) Statistical: Perform time-series specific statistical analyses.
 
         Parameters
         ----------
         config: The specified config block from the user YAML file.
+
+        Returns
+        -------
+        self.params : Any additional generated parameters for subsequent Blocks.
 
         """
         super().run_block(config)
@@ -61,18 +67,18 @@ class EDABlock(Block):
 
     def run_general(self, key_name: str, config: Dict) -> Dict:
         """
-        EDA operation that loads data from a file source into a pd.DataFrame.
-        This is the only op where input data_dict is expected to be empty. All
-        other ops expect the data_dict to have some existing data as input.
+        EDA operation that performs general plots, subplots, and other types
+        of visualizations. This can be used to check whether the latest data has
+        been properly cleaned, massaged, or transformed.
 
         Parameters
         ----------
-        key_name : The key for this config block, usually as 'extract'{#num}.
-        config : Specifies the source file path and how it is delineated.
+        key_name : The key for this config block, usually as 'general'{#num}.
+        config : Specifies the labels and dimensions of the plots.
 
         Returns
         -------
-        params : The extracted dataset from the given source file.
+        params : Any plot output params could be useful in subsequent Blocks.
         
         """
         # VALIDATE necessary general parameters before running procedure
@@ -118,19 +124,20 @@ class EDABlock(Block):
 
     def run_statistical(self, key_name: str, config: Dict) -> Dict:
         """
-        EDA operation that loads data from a file source into a pd.DataFrame.
-        This is the only op where input data_dict is expected to be empty. All
-        other ops expect the data_dict to have some existing data as input.
+        EDA operation that performs time-series or other types of statistical
+        analyses. This also includes any plot visualizations that come out of
+        this analyses. This can be useful to signal how the data may need to
+        be further transformed in subsequent Block steps.
 
         Parameters
         ----------
-        key_name : The key for this config block, usually as 'extract'{#num}.
-        config : Specifies the source file path and how it is delineated.
+        key_name : The key for this config block, usually as 'statistical'{#num}.
+        config : Specifies the labels and dimensions of the plots.
 
         Returns
         -------
-        params : The extracted dataset from the given source file.
-
+        params : Any stat output params could be useful for subsequent Blocks.
+        
         """
         # VALIDATE necessary statistical parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \

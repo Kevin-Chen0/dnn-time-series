@@ -7,6 +7,7 @@ from typing import Dict
 
 def validate_config(config: Dict) -> None:
     """
+    Validate the main root keys of the user config YAML file.
 
     Parameters
     ----------
