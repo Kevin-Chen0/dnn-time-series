@@ -15,7 +15,6 @@ def validate_eda(key_name: str, config: Dict) -> None:
     """
     # TEST 1) Validate config's keys #########################################
     # Get the given EDA config keys and remove all non-alphabetical chars
-    # eda_keys = set(config.keys())
     eda_keys = {re.sub('[^a-zA-Z]+', '', key) for key in config.keys()}
     # Assert that eda keys only contain prefixes:
     valid_edas = {'general', 'statistical'}

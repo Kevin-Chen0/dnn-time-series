@@ -10,8 +10,8 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 class RNNWrapper:
 
     def __init__(self, n_input: int, n_output: int = 1, n_feature: int = 1,
-                 n_unit: int = 64, d_rate: float = 0.15, optimizer: str = 'adam',
-                 loss: str = "mse") -> None:
+                 n_layer: int = 1, n_unit: int = 64, d_rate: float = 0.15,
+                 optimizer: str = 'adam', loss: str = "mse") -> None:
         """
         Wrapper that abstracts the underlying RNN Model in order to better
         decouple the actual model specification from DNN package execution.
@@ -27,7 +27,9 @@ class RNNWrapper:
         loss : The loss or error function for model to minimize, see: https://keras.io/losses/
 
         """
-        self.rnn_model = StackedRNN(n_input, n_output, n_unit, n_feature, d_rate)
+        self.rnn_model = CustomRNN(n_input, n_output, n_layer, n_unit,
+                                   n_feature, d_rate
+                                   )
         self.rnn_model.compile(optimizer, loss)
         self.run_time = 0.0
 
@@ -145,7 +147,36 @@ def StackedRNN(n_input: int, n_output: int, n_unit: int, n_feature: int,
     return model
 
 
-def CustomRNN(n_input: int, n_output: int, n_unit: int,
-              n_feature: int) -> Sequential:
+def CustomRNN(n_input: int, n_output: int, n_layer: int, n_unit: int, 
+              n_feature: int, d_rate: float = 0.5) -> Sequential:
+    """
+    A customized, n-layer deep RNN model that includes dropout rates.
 
-    pass
+    Parameters
+    ----------
+    n_input : Number of input timesteps used to generate a forecast.
+    n_output : Number of output timesteps or the forecast horizon.
+    n_layer : Number of layers in the NN, excluding the input layer.
+    n_unit : Number of neural units per layer.
+    n_feature : Number of features, a univariate time-series has n_feature=1.
+    d_rate : Dropout rate for each layer, see: https://keras.io/layers/core/#dropout
+
+    Returns
+    -------
+    model : The keras.Sequential model architecture itself to be fitted with data.
+
+    """
+    model = Sequential()
+    for l in range(n_layer):
+        ret_seq = True if l < (n_layer-1) else False
+        model.add(SimpleRNN(n_unit, activation="tanh",
+                            return_sequences=ret_seq,
+                            input_shape=(n_input, n_feature)
+                            )
+                  )
+        model.add(Dropout(d_rate))
+    model.add(Dense(n_output))
+    
+    print("Stacked RNN model summary:")
+    model.summary()
+    return model

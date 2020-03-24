@@ -14,7 +14,6 @@ def validate_etl(key_name: str, config: Dict) -> None:
     """
     # TEST 1) Validate config's keys #########################################
     # Get the given ETL config keys and remove all non-alphabetical chars
-    # etl_keys = set(config.keys())
     etl_keys = {re.sub('[^a-zA-Z]+', '', key) for key in config.keys()}
     # Assert that etl keys only contain prefixes:
     valid_etls = {'extract', 'univariate', 'clean', 'transform', 'supervise'}

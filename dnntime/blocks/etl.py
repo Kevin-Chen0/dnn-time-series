@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import re
-from typing import DefaultDict, Dict, Optional, Tuple, Union
-# Block Basic Classes
+from typing import Dict, Optional
+# Blocks base modules
 from .base import Block, CheckpointDict
 # Tests
 from ..tests import etl_test as test
 # Utils
-from ..utils.etl import load_data, clean_data
-from ..utils.etl import log_power_transform, decompose, split_data
-from ..utils.ts import interval_to_freq, period_to_timesteps
+from ..utils.etl_ext import load_data, clean_data
+from ..utils.etl_trans import log_power_transform, decompose, split_data
+from ..utils.ts import period_to_timesteps
 
 
 class ETLBlock(Block):
@@ -19,7 +19,7 @@ class ETLBlock(Block):
 
     def run_block(self, config: Dict) -> CheckpointDict:
         """
-        
+
 
         Parameters
         ----------
@@ -53,7 +53,7 @@ class ETLBlock(Block):
 
     def run_extract(self, key_name: str, config: Dict) -> Optional[pd.DataFrame]:
         """
-        
+
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class ETLBlock(Block):
 
     def run_univariate(self, key_name: str, is_univariate: bool) -> pd.DataFrame:
         """
-        
+
 
         Parameters
         ----------
@@ -174,7 +174,7 @@ class ETLBlock(Block):
         stepn = self.params['step_number']
         subn = self.substep_counter
 
-        try:        
+        try:
             if method in ['box-cox', 'yeo-johnson', 'log']:
                 # Performs log or power transform and then normalize in one function
                 info = f"{stepn}.{subn}) Performed"
@@ -236,12 +236,12 @@ class ETLBlock(Block):
                                                     n_feature=n_feature,
                                                     g_min=0,     # min gap ratio
                                                     g_max=max_gap)  # max gap ratio
-    
+
             X, y, t = _orig  # original data tuple in supervised format
             X_train, y_train, t_train = _train
             X_val, y_val, t_val = _val
             X_test, y_test, t_test = _test
-    
+
             print("Converted time-series into supervised leraning problem "
                   "using walk-forward validation:"
                   )
@@ -258,11 +258,11 @@ class ETLBlock(Block):
             val_prct = len(X_val)/len(X)*100
             test_prct = len(X_test)/len(X)*100
             gap_prct = 100 - train_prct - val_prct - test_prct
-    
+
             print("\nSplit %:")
             print(f"Train: {train_prct:.2f}%, Val: {val_prct:.2f}%, Test: "
                   f"{test_prct:.2f}%, Gap: {gap_prct:.2f}%")
-    
+
             print("\nDataset shapes:")
             print(f"    Original:")
             print(f"        data shape = {df_curr.shape}")
@@ -282,7 +282,7 @@ class ETLBlock(Block):
             print(f"        X_test.shape = {X_test.shape}")
             print(f"        y_test.shape = {y_test.shape}")
             print(f"        t_test.shape = {t_test.shape}")
-    
+
             data = {
                 'X_train': X_train,
                 'y_train': y_train,

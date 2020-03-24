@@ -13,13 +13,19 @@ def validate_model(key_name: str, config: Dict) -> None:
     """
     # TEST 1) Validate config's keys #########################################
     # Get the given ETL config keys and remove all non-alphabetical chars
-    # model_keys = set(config.keys())
-    model_keys = {re.sub('[^a-zA-Z]+', '', key) for key in config.keys()}
+    model_keys = {re.sub('[^a-zA-Z_]+', '', key) for key in config.keys()}
     # Assert that etl keys only contain prefixes:
-    valid_models = {'dnn'}
+    valid_models = {'enable_gpu', 'dnn'}
     assert len(model_keys - valid_models) == 0, "Model config keys must contain " + \
            f"only the following subkeys: {valid_models}. '{key_name}' " + \
            f"contains the following: {list(config.keys())}."
+    path = f"'{key_name}'-> "
+
+    # TEST 2) Validate 'enable_gpu' sub-config key (optional)  ###############
+    if 'enable_gpu' in config.keys():
+        assert isinstance(
+            config['enable_gpu'], bool
+        ), f"{path}'enable_gpu' value must be a bool type."
 
 
 def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
@@ -40,14 +46,6 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
             dnn_conf['alias'], str
         ), f"{path}'alias' value must be a str type."
         assert dnn_conf['alias'] != '', f"{path}'alias' value cannot be blank."
-
-    # TEST 2) Validate 'enable_gpu' sub-config key ##################################
-    # assert (
-    #     'enable_gpu' in dnn_conf.keys()
-    # ), f"{path}'enable_gpu' key is not found in the config file."
-    # assert isinstance(
-    #     dnn_conf['enable_gpu'], bool
-    # ), f"{path}'enable_gpu' value must be a bool type."
 
     # TEST 3) Validate 'model_type' sub-config key ##################################
     assert (
@@ -73,7 +71,15 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['batch_size'], int
     ), f"{path}'batch_size' value must be an int type."
 
-    # TEST 6) Validate 'number_units' sub-config key ##################################
+    # TEST 6) Validate 'number_layers' sub-config key ##################################
+    assert (
+        'number_layers' in dnn_conf.keys()
+    ), f"{path}'number_layers' key is not found in the config file."
+    assert isinstance(
+        dnn_conf['number_layers'], int
+    ), f"{path}'number_layers' value must be an int type."
+
+    # TEST 7) Validate 'number_units' sub-config key ##################################
     assert (
         'number_units' in dnn_conf.keys()
     ), f"{path}'number_units' key is not found in the config file."
@@ -81,7 +87,7 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['number_units'], int
     ), f"{path}'number_units' value must be an int type."
 
-    # TEST 7) Validate 'dropout_rate' sub-config key ##################################
+    # TEST 8) Validate 'dropout_rate' sub-config key ##################################
     assert (
         'dropout_rate' in dnn_conf.keys()
     ), f"{path}'dropout_rate' key is not found in the config file."
@@ -89,7 +95,7 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['dropout_rate'], float
     ), f"{path}'dropout_rate' value must be an float type."
 
-    # TEST 8) Validate 'optimizer' sub-config key ##################################
+    # TEST 9) Validate 'optimizer' sub-config key ##################################
     assert (
         'optimizer' in dnn_conf.keys()
     ), f"{path}'optimizer' key is not found in the config file."
@@ -97,7 +103,7 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['optimizer'], str
     ), f"{path}'optimizer' value must be a str type."
 
-    # TEST 9) Validate 'objective_function' sub-config key ##################################
+    # TEST 10) Validate 'objective_function' sub-config key ##################################
     assert (
         'objective_function' in dnn_conf.keys()
     ), f"{path}'objective_function' key is not found in the config file."
@@ -105,7 +111,7 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['objective_function'], str
     ), f"{path}'objective_function' value must be a str type."
 
-    # TEST 10) Validate 'verbose' sub-config key ##################################
+    # TEST 11) Validate 'verbose' sub-config key ##################################
     assert (
         'verbose' in dnn_conf.keys()
     ), f"{path}'verbose' key is not found in the config file."
@@ -113,7 +119,7 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
         dnn_conf['verbose'], int
     ), f"{path}'verbose' value must be an int type."
 
-    # TEST 11) Validate 'score_type' sub-config key ##################################
+    # TEST 12) Validate 'score_type' sub-config key ##################################
     assert (
         'score_type' in dnn_conf.keys()
     ), f"{path}'score_type' key is not found in the config file."

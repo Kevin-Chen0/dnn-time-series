@@ -10,7 +10,7 @@
 from .__version__ import __version__
 # Endpoint functions for users
 from .run import run_package as run
-from .utils.etl import load_data as load, clean_data as clean
+from .utils import load_data as load, clean_data as clean
 
 
 if __name__ == "__main__":

@@ -11,9 +11,9 @@ from ..utils.metrics import calc_rmse, calc_mae, calc_mape
 class ConvLSTMWrapper:
 
     def __init__(self, n_steps: int, l_subseq: int = 1, n_row: int = 1,
-                 n_col: int = 1, n_feature: int = 1, n_unit: int = 64,
-                 d_rate: float = 0.15, optimizer: str = 'adam', loss: str = "mse"
-                 ) -> None:
+                 n_col: int = 1, n_feature: int = 1, n_layer: int = 1,
+                 n_unit: int = 64, d_rate: float = 0.15, optimizer: str = 'adam',
+                 loss: str = "mse") -> None:
         """
         Wrapper that abstracts the underlying ConvLSTM Model in order to better
         decouple the actual model specification from DNN package execution.
@@ -163,6 +163,7 @@ def StackedConvLSTM(n_steps: int, n_row: int, n_col: int, n_unit: int,
     model.add(TimeDistributed(Dense(n_unit, activation='relu')))
     model.add(TimeDistributed(Dropout(d_rate)))
     model.add(TimeDistributed(Dense(1)))
+
     print("Stacked ConvLSTM model summary:")
     model.summary()
     return model

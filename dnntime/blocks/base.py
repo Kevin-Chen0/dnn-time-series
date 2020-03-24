@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
 from collections import defaultdict
-from typing import DefaultDict, Dict, Tuple, Union
+from tensorflow import keras
+from typing import DefaultDict, Dict, Union
 from IPython.display import display, HTML
-from abc import ABC, abstractmethod
 
 
 class CheckpointDict:
@@ -70,9 +68,9 @@ class CheckpointDict:
 
 class Block:
 
-    def __init__(self, data_dict: CheckpointDict = CheckpointDict('data'),
-                 params: Dict = {}, model_dict: CheckpointDict =
-                 CheckpointDict('model')) -> None:
+    def __init__(self, data_dict: CheckpointDict, params: Dict,
+                 model_dict: CheckpointDict = CheckpointDict('model')
+                 ) -> None:
         """
         Block is a concrete class..
 
@@ -86,7 +84,7 @@ class Block:
         self.params = params
         self.substep_counter = 1
 
-    def run_block(self, config : Dict) -> Union[CheckpointDict, Dict]:
+    def run_block(self, config: Dict) -> None:
         """
         Method that...
 
@@ -105,14 +103,14 @@ class Block:
         A global function that prints out a given text in bold format. It uses
         two different fonts depending on whether the user interface or ui is a
         'console' or 'notebook'.
-    
+
         Parameters
         ----------
         text : The text to printed out.
         ui : Either 'console' (default) or 'notebook'.
         n_before : Number of newlines added before the actual text for formatting.
         n_after : Number of newlines added after the actual text for formatting.
-    
+
         """
         if self.params['ui'] == 'notebook':
             nl = "<br>"
@@ -120,4 +118,3 @@ class Block:
         elif self.params['ui'] == 'console':
             nl = "\n"
             print(f"\033[1m{nl*n_before}{text}{nl*n_after}\033[0m")
-
