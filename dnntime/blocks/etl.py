@@ -19,15 +19,25 @@ class ETLBlock(Block):
 
     def run_block(self, config: Dict) -> CheckpointDict:
         """
-
+        Execute the ELTBlock function on the data_dict and/or model_dict based on
+        the user's config YAML file as well preexisting params from initialization.
+        It modifies the data then adds the newly modified data into the data_dict.
+        It returns this data_dict as well as any supplementary params.
+        Here are the following ETL operations:
+            1) Extract: Load data from a file source into a pd.DataFrame. This is
+                        the only op where input data_dict is expected to be empty.
+                        See utils.etl_ext.load_data function.
+            2) Univariate: Remove all other columns in data other than its target.
+            3) Clean: Massage the data, including regarding its DateTimeIndex and
+                      NaN data values. See utils.etl_ext.clean_data function.
+            4) Transform: Transforming the data in other to make it more digestible
+                          for DNNs models, including deseasonalizing and normalization. 
+            5) Supervise: Making the dataset as a supervised learning problem.
+                          See utils.etl_trans.split_data function.
 
         Parameters
         ----------
-        config : Dict
-
-        Returns
-        -------
-        df : TYPE
+        config: The specified config block from the user YAML file.
 
         """
         super().run_block(config)
@@ -53,15 +63,18 @@ class ETLBlock(Block):
 
     def run_extract(self, key_name: str, config: Dict) -> Optional[pd.DataFrame]:
         """
-
+        ETL operation that loads data from a file source into a pd.DataFrame.
+        This is the only op where input data_dict is expected to be empty. All
+        other ops expect the data_dict to have some existing data as input.
 
         Parameters
         ----------
-        config : Dict
+        key_name : The key for this config block, usually as 'extract'{#num}.
+        config : Specifies the source file path and how it is delineated.
 
         Returns
         -------
-        df : TYPE
+        df : The extracted dataset from the given source file.
 
         """
         # VALIDATE necessary extract parameters before running procedure
@@ -94,15 +107,18 @@ class ETLBlock(Block):
 
     def run_univariate(self, key_name: str, is_univariate: bool) -> pd.DataFrame:
         """
-
+        ETL operation that strips away all other columns so only the data's
+        target column remains.
 
         Parameters
         ----------
-        config : Dict
+        key_name : The key for this config block, usually as 'univarate': {bool}.
+        is_univariate : Specifies whether the make the data univariate. If not,
+                        then this function will do nothing.
 
         Returns
         -------
-        df : TYPE
+        df : The univariate dataset with only its target column.
 
         """
         # VALIDATE necessary univariate parameters before running procedure
@@ -122,7 +138,21 @@ class ETLBlock(Block):
         return df
 
     def run_clean(self, key_name: str, config: Dict) -> pd.DataFrame:
+        """
+        ETL operation that massages the data, including setting up its DateTimeIndex
+        as well as dealing with NaN or missing values.
 
+        Parameters
+        ----------
+        key_name : The key for this config block, usually as 'clean'{#num}.
+        config : Specifies the cleaning procedure, including what cleaning steps
+                 to include/exclude.
+
+        Returns
+        -------
+        df : The "cleaned" dataset.
+
+        """
         # VALIDATE necessary clean parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \
             "run_clean() needs existing data to run."
@@ -152,7 +182,21 @@ class ETLBlock(Block):
         return df
 
     def run_transform(self, key_name: str, config: Dict) -> pd.DataFrame:
+        """
+        ETL operation that transforms the data in other to make it more
+        digestible for DNNs models to train on. Types of transformations
+        include seasonal adjustment and/or normalization of data. 
 
+        Parameters
+        ----------
+        key_name : The key for this config block, usually as 'transform'{#num}.
+        config : Specifies the transformation procedure(s).
+
+        Returns
+        -------
+        df : The transformed data.
+
+        """
         # VALIDATE necessary transform parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \
             "run_transform() needs existing data to run."
@@ -199,7 +243,23 @@ class ETLBlock(Block):
         return df
 
     def run_supervise(self, key_name: str, config: Dict) -> Dict:
+        """
+        ETL operation that make the dataset into a supervised learning problem.
+        This is usually the final data ETL op before DNN modeling.
 
+        Parameters
+        ----------
+        key_name : The key for this config block, usually as 'supervise'{#num}.
+        config : Specifies how the data is made supervised, including the input
+                 and forecast periods as well as how the data is divided into
+                 training, validation, and test sets.
+
+        Returns
+        -------
+        data : The dict of the datasets used for DNN modelings, including the
+               train and test sets.
+
+        """
         # VALIDATE necessary supervise parameters before running procedure
         assert self.data_dict.current_key is not None, "Data_dict is empty, " + \
             "run_supervise() needs existing data to run."

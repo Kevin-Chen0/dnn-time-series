@@ -1,9 +1,10 @@
 import pandas as pd
+# Matplotlib and Seaborn Visualizations
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 sns.set(style="white", color_codes=True)
-# Plotly Visualisations
+# Plotly Visualizations
 import plotly.express as px
 import plotly.graph_objects as go
 # Add commas to y-axis tick values for graphs
@@ -12,8 +13,9 @@ from typing import List, Tuple
 
 
 def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str,
-            x_label: str = "Date", width: int = 10, height: int = 4,
-            line_width: float = 0.1) -> None:
+            x_label: str = "Date", width: int = 10, height: int = 4, line_width: 
+            float = 0.1, figsize: Tuple[int, int] = (20, 8), plotly: bool = False
+            ) -> None:
     """
     Plot the input time-series dataframe using plotly visualization.
 
@@ -28,32 +30,46 @@ def ts_plot(df: pd.DataFrame, dt_col: str, target: str, title: str, y_label: str
     width : The width of the plot display. The default width is 10.
     height : The height of the plot display. The default height is 4.
     line_width : How solid the plot line is. The default is 0.1.
+    figsize: The width and height of the plot. The default is width=20, height=8.
+    plotly: Whether to use plotly as viz or matplotlib+seaborn. The default is
+            False, or using matplotlib+seaborn and it is more portable.
 
-    """
-    if isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex):
-        df = df.copy()  # prevents from modifying original df
-        df[dt_col] = df.index
-    fig = px.line(df, x=dt_col, y=target, title=title)
-    fig.update_traces(line=dict(width=line_width))
-    fig.update_layout(autosize=False,
-                      width=100*width,
-                      height=100*height,
-                      margin=go.layout.Margin(
-                          l=50,
-                          r=50,
-                          b=40,
-                          t=50,
-                          pad=0
-                      ),
-                      xaxis_title=x_label,
-                      yaxis_title=y_label)
-    fig.show()
+    """    
+    if plotly:
+        if isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex):
+            df = df.copy()  # prevents from modifying original df
+            df[dt_col] = df.index
+
+        fig = px.line(df, x=dt_col, y=target, title=title)
+        fig.update_traces(line=dict(width=line_width))
+        fig.update_layout(autosize=False,
+                          width=100*width,
+                          height=100*height,
+                          margin=go.layout.Margin(
+                              l=50,
+                              r=50,
+                              b=40,
+                              t=50,
+                              pad=0
+                          ),
+                          xaxis_title=x_label,
+                          yaxis_title=y_label)
+        fig.show()
+    else:
+        ax = df.plot(legend=True, figsize=figsize)
+        plt.title(title, fontsize=12, fontweight='bold')
+        ax.autoscale(axis='x', tight=True)
+        ax.set(xlabel=x_label, ylabel=y_label);
+        ax.yaxis.set_major_formatter(formatter);
+        plt.show()
+
     print()
 
 
 def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
                 y_label: str, x_label: str = "Date", split: str = 'y',
-                line_width: float = 0.1) -> None:
+                line_width: float = 0.1, figsize: Tuple[int, int] = (20, 8),
+                plotly: bool = False) -> None:
     """
     Plot the input time-series dataframe using plotly visualization into
     multiple subplots. Uses ts_sub_split() to demarcate the time-series.
@@ -68,6 +84,9 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
     x_label : x_label of the displayed plot. The default is 'Date'.
     split : How the time-series is demarcated. The default is 'y' for year.
     line_width : How solid the plotline is. The default is 0.1.
+    figsize: The width and height of the plot. The default is width=20, height=8.
+    plotly: Whether to use plotly as viz or matplotlib+seaborn. The default is
+            False, or using matplotlib+seaborn and it is more portable.
 
     """
     sub_ts, idx = ts_sub_split(df, split=split)
@@ -78,7 +97,9 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
                     title=f"{title} for {year}",
                     y_label=y_label,
                     x_label=x_label,
-                    line_width=line_width
+                    line_width=line_width,
+                    figsize=figsize,
+                    plotly=plotly
                     )
         elif split == 'm':
             year, month = idx[i][0], idx[i][1]
@@ -86,7 +107,9 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
                     title=f"{title} for {year}-{month:02d}",
                     y_label=y_label,
                     x_label=x_label,
-                    line_width=line_width
+                    line_width=line_width,
+                    figsize=figsize,
+                    plotly=plotly
                     )
         elif split == 'q':
             year, month = idx[i][0], idx[i][1]
@@ -94,7 +117,9 @@ def ts_sub_plot(df: pd.DataFrame, dt_col: str, target: str, title: str,
                     title=f"{title} from {year}-{month:02d} to {year}-{month+2:02d}",
                     y_label=y_label,
                     x_label=x_label,
-                    line_width=line_width
+                    line_width=line_width,
+                    figsize=figsize,
+                    plotly=plotly
                     )
 
 

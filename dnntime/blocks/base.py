@@ -56,11 +56,11 @@ class CheckpointDict:
 
     def get(self) -> DefaultDict[str, Dict]:
         """
-        Retrieves the internal defaultdict.
+        Retrieves CheckpointDict's internal defaultdict.
 
         Returns
         -------
-        self.dict : the internal defaultdict that store of obj checkpoints
+        self.dict : The internal defaultdict that store of obj checkpoints.
 
         """
         return self.dict
@@ -72,10 +72,18 @@ class Block:
                  model_dict: CheckpointDict = CheckpointDict('model')
                  ) -> None:
         """
-        Block is a concrete class..
+        Block is the most basic building module of the dnntime.
+        It structures how each STEP is executed, its input parameters from prior
+        Block, and the outputs that can be used to subsequent Block. dnntime's
+        run_package() is basically made up of a "chain" or Blocks that is 
+        configured by the user's YAML file. More specific types of Blocks,
+        including ETLBlock, ETABlock, and ModelBlock inherit from Block.
 
         Parameters
         ----------
+        data_dict: The recorded data transformation.
+        params: Any additional parameters passed from the results of previous Blocks.
+        model_dict: The recorded model architectures, params, and results.
         cp_type : Checkpoint type. Options are 'data' or 'model'.
 
         """
@@ -86,11 +94,13 @@ class Block:
 
     def run_block(self, config: Dict) -> None:
         """
-        Method that...
+        Execute the Block function on the data_dict and/or model_dict based on
+        the user's config YAML file as well preexisting params from initialization.
 
-        Returns
-        -------
-        self.dict : the internal defaultdict that store of obj checkpoints
+        Parameters
+        ----------
+        config: The specified config block from the user YAML file.
+
 
         """
         print("\n\n-------------------------------------------------------------------")

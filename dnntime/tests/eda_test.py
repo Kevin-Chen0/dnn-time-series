@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import ast
 import re
 from typing import Dict
 # Validate existence of datetime and target columns in the etl_test file
@@ -65,13 +66,33 @@ def validate_general(key_name: str, gen_conf: Dict, params: Dict) -> None:
         gen_conf['x_label'], str
     ), f"{path}'x_label' value must be a str type."
 
-    # TEST 4) Validate 'y_label' sub-config key ################################
+    # TEST 4) Validate 'y_label' sub-config key ##############################
     assert (
         'y_label' in gen_conf.keys()
     ), f"{path}'y_label' key is not found in the config file."
     assert isinstance(
         gen_conf['y_label'], str
     ), f"{path}'y_label' value must be a str type."
+
+    # TEST 5) Validate 'figsize' sub-config key (optional) ###################
+    if 'figsize' in gen_conf.keys():
+        gen_conf_figsize = ast.literal_eval(gen_conf['figsize'])
+        assert isinstance(
+            gen_conf_figsize, tuple
+        ), f"{path}'figsize' value must be a tuple type."
+        assert len(gen_conf_figsize) == 2, f"{path}'figsize' must have length of 2."
+        assert isinstance(
+            gen_conf_figsize[0], int
+        ), f"{path}'figsize[0]' value must be an int type."
+        assert isinstance(
+            gen_conf_figsize[1], int
+        ), f"{path}'figsize[1]' value must be an int type."
+
+   # TEST 6) Validate 'plotly' sub-config key (optional) #####################
+    if 'plotly' in gen_conf.keys():
+        assert isinstance(
+            gen_conf['plotly'], bool
+        ), f"{path}'plotly' value must be a bool type."
 
     validate_datetime_target(params)
 
@@ -126,5 +147,25 @@ def validate_statistical(key_name: str, stat_conf: bool, params: Dict) -> None:
     assert isinstance(
         stat_conf['confidence_interval'], float
     ), f"{path}'confidence_interval' value must be a float type."
+
+    # TEST 6) Validate 'figsize' sub-config key (optional) ####################
+    if 'figsize' in stat_conf.keys():
+        stat_conf_figsize = ast.literal_eval(stat_conf['figsize'])
+        assert isinstance(
+            stat_conf_figsize, tuple
+        ), f"{path}'figsize' value must be a tuple type."
+        assert len(stat_conf_figsize) == 2, f"{path}'figsize' must have length of 2."
+        assert isinstance(
+            stat_conf_figsize[0], int
+        ), f"{path}'figsize[0]' value must be an int type."
+        assert isinstance(
+            stat_conf_figsize[1], int
+        ), f"{path}'figsize[1]' value must be an int type."
+
+   # TEST 7) Validate 'plotly' sub-config key (optional) #####################
+    if 'plotly' in stat_conf.keys():
+        assert isinstance(
+            stat_conf['plotly'], bool
+        ), f"{path}'plotly' value must be a bool type."
 
     validate_datetime_target(params)

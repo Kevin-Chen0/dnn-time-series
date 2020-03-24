@@ -1,9 +1,10 @@
 import pandas as pd
+# Matplotlib and Seaborn Visualizations
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 sns.set(style="white", color_codes=True)
-# Plotly Visualisations
+# Plotly Visualizations
 import plotly.express as px
 import plotly.graph_objects as go
 # Add commas to y-axis tick values for graphs
@@ -23,7 +24,8 @@ from .eda_gen import ts_plot
 def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
                            title: str, y_label: str, x_label: str = "Date",
                            line_width: float = 0.1, model: str = 'additive',
-                           plotly: bool = False, prophet: bool = False) -> None:
+                           figsize: Tuple[int, int] = (20, 8), plotly:
+                           bool = False, prophet: bool = False) -> None:
     """
     Plot the error, trend, and seasonality (ETS) decompositions of the input
     time-series dataframe using statsmodels.
@@ -38,46 +40,51 @@ def ets_decomposition_plot(df: pd.DataFrame, dt_col: str, target: str,
     x_label : x_label of the displayed plot. The default is 'Date'.
     line_width : How solid the plotline is. The default is 0.1.
     model : Types of seasonal components. Either 'additive' (default) or 'multiplicative'.
+    figsize : The dimension size of the plot display. The default is (20, 8).
     plotly : Whether the plot using plotly or matplotlib+seaborn. The default is False.
     prophet : Whether the include results from Facebook's Prophet. The default is False.
 
     """
     pd.plotting.register_matplotlib_converters()
     ets = seasonal_decompose(df[target], model)
-    if plotly:
-        # Observed
-        ts_plot(ets.observed.to_frame(), dt_col, target,
-                title=f"{title} (Observed)",
-                x_label=x_label,
-                y_label=f"Observed {y_label}",
-                line_width=line_width
-                )
-        # Trend
-        ts_plot(ets.trend.to_frame(), dt_col, 'trend',
-                title=f"{title} (Trend)",
-                x_label=x_label,
-                y_label=f"Trend {y_label}",
-                line_width=line_width*4
-                )
-        # Seasonality
-        ts_plot(ets.seasonal.to_frame(), dt_col, 'seasonal',
-                title=f"{title} (Seasonality)",
-                x_label=x_label,
-                y_label=f"Seasonal {y_label}",
-                line_width=line_width/2
-                )
-        # Residual
-        ts_plot(ets.resid.to_frame(), dt_col, 'resid',
-                title=f"{title} (Residual)",
-                x_label=x_label,
-                y_label=f"Residual {y_label}",
-                line_width=line_width
-                )
-        print()
-    else:
-        ets.plot()
-        plt.show()
-        print()
+
+    # Observed
+    ts_plot(ets.observed.to_frame(), dt_col, target,
+            title=f"{title} (Observed)",
+            x_label=x_label,
+            y_label=f"Observed {y_label}",
+            line_width=line_width,
+            figsize=figsize,
+            plotly=plotly
+            )
+    # Trend
+    ts_plot(ets.trend.to_frame(), dt_col, 'trend',
+            title=f"{title} (Trend)",
+            x_label=x_label,
+            y_label=f"Trend {y_label}",
+            line_width=line_width*4,
+            figsize=figsize,
+            plotly=plotly
+            )
+    # Seasonality
+    ts_plot(ets.seasonal.to_frame(), dt_col, 'seasonal',
+            title=f"{title} (Seasonality)",
+            x_label=x_label,
+            y_label=f"Seasonal {y_label}",
+            line_width=line_width/2,
+            figsize=figsize,
+            plotly=plotly
+            )
+    # Residual
+    ts_plot(ets.resid.to_frame(), dt_col, 'resid',
+            title=f"{title} (Residual)",
+            x_label=x_label,
+            y_label=f"Residual {y_label}",
+            line_width=line_width,
+            figsize=figsize,
+            plotly=plotly
+            )
+    print()
 
     if prophet:
         dfp = df.reset_index()
