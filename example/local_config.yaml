@@ -7,7 +7,7 @@ etl1:
     description: 'Extract Data from Source'
     extract:
         alias: 'Original'   # If alias is blank, then default will be 'Extract' with proper format
-    	file_path: 'datasets/kaggle/energy_dataset.csv'
+        file_path: 'datasets/kaggle/energy_dataset.csv'
         delineator: ','
     univariate: True
 etl2:
@@ -25,6 +25,8 @@ eda1:
         title: 'PJME Regional Power Demand Time-Series'
         x_label: 'Datetime'
         y_label: 'Total Demand (MW)'
+        figsize: (24, 8)
+        # plotly: True
 eda2:
     description: 'EDA II (Time-Series Stats)'
     statistical:
@@ -32,6 +34,8 @@ eda2:
         x_label: 'Datetime'
         y_label: 'Total Demand (MW)'
         confidence_interval: 0.95
+        figsize: (20, 6)
+        # plotly: True
 etl3:
     description: 'Preprocessing II (Transformations)'
     transform1:
@@ -53,51 +57,15 @@ etl4:
 model:
     description: 'Model Search (DNNs)'
     enable_gpu: False
-    dnn1:
-        alias: 'RNN'
-        model_type: 'rnn'
-        epochs: 2
-        batch_size: 512
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn2:
+    verbose: 1  # description for model 'fit' and 'evaluate'
+    score_type: 'rmse'
+    dnn:
         alias: 'LSTM'
         model_type: 'lstm'
         epochs: 2
         batch_size: 512
-        number_layers: 3
+        number_layers: 1
         number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
+        dropout_rate: 0.25   # dropout rate
         optimizer: 'adam'
         objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn3:
-        alias: 'GRU'
-        model_type: 'gru'
-        epochs: 2
-        batch_size: 512
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn4:
-        alias: 'CONVLSTM'
-        model_type: 'convlstm'
-        epochs: 2
-        batch_size: 512
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'

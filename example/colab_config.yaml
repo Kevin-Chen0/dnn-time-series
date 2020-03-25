@@ -1,6 +1,6 @@
 # Config template to input parameters into dnntime
 meta:
-    user_interface: 'notebook'  # either 'console' (default) or 'notebook'
+    user_interface: 'console'  # either 'console' (default) or 'notebook'
     datetime_column: 'time'
     target_column: 'total load actual'
 etl1:
@@ -25,6 +25,8 @@ eda1:
         title: 'PJME Regional Power Demand Time-Series'
         x_label: 'Datetime'
         y_label: 'Total Demand (MW)'
+        figsize: (24, 8)
+        # plotly: True
 eda2:
     description: 'EDA II (Time-Series Stats)'
     statistical:
@@ -32,6 +34,8 @@ eda2:
         x_label: 'Datetime'
         y_label: 'Total Demand (MW)'
         confidence_interval: 0.95
+        figsize: (20, 6)
+        # plotly: True
 etl3:
     description: 'Preprocessing II (Transformations)'
     transform1:
@@ -53,51 +57,57 @@ etl4:
 model:
     description: 'Model Search (DNNs)'
     enable_gpu: True
-    dnn1:
-        alias: 'RNN'
-        model_type: 'rnn'
+    verbose: 1  # description for model 'fit' and 'evaluate'
+    score_type: 'rmse'
+    # OPTION 1) Run all DNN models with common hyperparameters specified here
+    dnn:
+        model_type: 'all'
         epochs: 10
-        batch_size: 768
+        batch_size: 512
         number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
+        number_units: 256   # number of units per layer
+        dropout_rate: 0.25   # dropout rate
         optimizer: 'adam'
         objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn2:
-        alias: 'LSTM'
-        model_type: 'lstm'
-        epochs: 10
-        batch_size: 768
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn3:
-        alias: 'GRU'
-        model_type: 'gru'
-        epochs: 10
-        batch_size: 768
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
-    dnn4:
-        alias: 'CONVLSTM'
-        model_type: 'convlstm'
-        epochs: 10
-        batch_size: 768
-        number_layers: 3
-        number_units: 128   # number of units per layer
-        dropout_rate: 0.15   # dropout rate
-        optimizer: 'adam'
-        objective_function: 'mse'  # the loss value minimized by the dnn model
-        verbose: 1     # description for model 'fit' and 'evaluate'
-        score_type: 'rmse'
+    # OPTION 2) Run each DNN model invidually with configurable parameters for each one
+    # In this default setup, both OPTION 1) and 2) will produce the same results
+    # dnn1:
+    #     alias: 'RNN'
+    #     model_type: 'rnn'
+    #     epochs: 10
+    #     batch_size: 512
+    #     number_layers: 3
+    #     number_units: 256   # number of units per layer
+    #     dropout_rate: 0.25   # dropout rate
+    #     optimizer: 'adam'
+    #     objective_function: 'mse'  # the loss value minimized by the dnn model
+    # dnn2:
+    #     alias: 'LSTM'
+    #     model_type: 'lstm'
+    #     epochs: 10
+    #     batch_size: 512
+    #     number_layers: 3
+    #     number_units: 256   # number of units per layer
+    #     dropout_rate: 0.25   # dropout rate
+    #     optimizer: 'adam'
+    #     objective_function: 'mse'  # the loss value minimized by the dnn model
+    # dnn3:
+    #     alias: 'GRU'
+    #     model_type: 'gru'
+    #     epochs: 10
+    #     batch_size: 512
+    #     number_layers: 3
+    #     number_units: 256   # number of units per layer
+    #     dropout_rate: 0.25   # dropout rate
+    #     optimizer: 'adam'
+    #     objective_function: 'mse'  # the loss value minimized by the dnn model
+    # dnn4:
+    #     alias: 'CONVLSTM'
+    #     model_type: 'convlstm'
+    #     epochs: 10
+    #     batch_size: 512
+    #     number_layers: 3
+    #     number_units: 256   # number of units per layer
+    #     dropout_rate: 0.25   # dropout rate
+    #     optimizer: 'adam'
+    #     objective_function: 'mse'  # the loss value minimized by the dnn model
