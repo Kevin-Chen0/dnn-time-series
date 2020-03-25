@@ -17,17 +17,33 @@ def validate_model(key_name: str, config: Dict) -> None:
     # Get the given ETL config keys and remove all non-alphabetical chars
     model_keys = {re.sub('[^a-zA-Z_]+', '', key) for key in config.keys()}
     # Assert that etl keys only contain prefixes:
-    valid_models = {'enable_gpu', 'dnn'}
+    valid_models = {'enable_gpu', 'score_type', 'verbose', 'dnn'}
     assert len(model_keys - valid_models) == 0, "Model config keys must contain " + \
         f"only the following subkeys: {valid_models}. '{key_name}' " + \
         f"contains the following: {list(config.keys())}."
     path = f"'{key_name}'-> "
 
-    # TEST 2) Validate 'enable_gpu' sub-config key (optional)  ###############
+    # TEST 2) Validate 'enable_gpu' sub-config key (optional) ################
     if 'enable_gpu' in config.keys():
         assert isinstance(
             config['enable_gpu'], bool
         ), f"{path}'enable_gpu' value must be a bool type."
+
+    # TEST 3) Validate 'score_type' sub-config key ###########################
+    assert (
+        'score_type' in config.keys()
+    ), f"{path}'score_type' key is not found in the config file."
+    assert isinstance(
+        config['score_type'], str
+    ), f"{path}'score_type' value must be a str type."
+
+    # TEST 4) Validate 'verbose' sub-config key (optional) ###################
+    assert (
+        'verbose' in config.keys()
+    ), f"{path}'verbose' key is not found in the config file."
+    assert isinstance(
+        config['verbose'], int
+    ), f"{path}'verbose' value must be an int type."
 
 
 def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
@@ -121,19 +137,3 @@ def validate_dnn(key_name: str, dnn_conf: Dict, params: Dict) -> None:
     assert isinstance(
         dnn_conf['objective_function'], str
     ), f"{path}'objective_function' value must be a str type."
-
-    # TEST 11) Validate 'verbose' sub-config key #############################
-    assert (
-        'verbose' in dnn_conf.keys()
-    ), f"{path}'verbose' key is not found in the config file."
-    assert isinstance(
-        dnn_conf['verbose'], int
-    ), f"{path}'verbose' value must be an int type."
-
-    # TEST 12) Validate 'score_type' sub-config key ##########################
-    assert (
-        'score_type' in dnn_conf.keys()
-    ), f"{path}'score_type' key is not found in the config file."
-    assert isinstance(
-        dnn_conf['score_type'], str
-    ), f"{path}'score_type' value must be a str type."

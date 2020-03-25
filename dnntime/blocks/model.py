@@ -60,6 +60,7 @@ class ModelBlock(Block):
         gpu = False
         if 'enable_gpu' in config.keys():
             gpu = config['enable_gpu']
+            del config['enable_gpu']
         physical_devices = tf.config.list_physical_devices('GPU')
         if len(physical_devices) == 0:
             print("GPU cannot be physically found, running on CPU...")
@@ -68,7 +69,14 @@ class ModelBlock(Block):
             print("GPU is disabled by user, running on CPU...")
         else:
             print("GPU is enabled, running on GPU...")
-        del config['enable_gpu']
+
+        self.params['verbose'] = 1
+        if 'verbose' in config.keys():
+            self.params['verbose'] = config['verbose']
+            del config['verbose']
+
+        self.params['score_type'] = config['score_type']
+        del config['score_type']
 
         for key in config.keys():
             keyword = re.sub('[^a-zA-Z]+', '', key)
@@ -79,7 +87,7 @@ class ModelBlock(Block):
                 if config[key]['model_type'] == 'all':
                     for model_key in model.keys():
                         name = model_key.upper()
-                        self.model_dict.save(model, name)
+                        self.model_dict.save(model[model_key], name)
                 # Save only the specified DNN model into data_dict
                 else:
                     name = key.title()
@@ -180,8 +188,6 @@ class ModelBlock(Block):
         d_rate = config['dropout_rate']  # dropout rate
         opt = config['optimizer']
         loss = config['objective_function']
-        verbose = config['verbose']
-        score_type = config['score_type']
         # Get most current dataset from data_dict
         X_train = data_curr['X_train']
         y_train = data_curr['y_train']
@@ -190,7 +196,9 @@ class ModelBlock(Block):
         n_input = X_train.shape[1]
         n_output = y_train.shape[1]
         n_feature = X_train.shape[2]
-
+        # Get other variables from params
+        verbose = self.params['verbose']
+        score_type = self.params['score_type']
         space = self.params['space']
         stepn = self.params['step_number']
         subn = self.substep_counter

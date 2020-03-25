@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import art
 import pandas as pd
+import operator
 import time
 import yaml
 import warnings
@@ -111,6 +112,20 @@ def run_package(
             print(f"{key} is not 'etl', 'eda', or 'model'. Stopping program "
                   "now, please fix.")
             return data_dict.get(), model_dict.get()
+
+    # Print out the best DL model based on lowest given score_type
+    final_stats = {}
+    score_type = params['score_type']
+    for key in model_dict.get().keys():
+        final_stats[key] = model_dict.get()[key][score_type]
+    best_model_name = min(final_stats.items(), key=operator.itemgetter(1))[0]
+
+    print("\n-----------------------------------------------------------------")
+    print("-----------------------------------------------------------------")
+    print("\nThe most accurate deep learning model is:")
+    print(f"    {best_model_name}")
+    best_score = model_dict.get()[best_model_name][score_type]
+    print(f"    {score_type.upper()} score: {best_score:.4f}")
 
     end_time = time.time()
     run_time = end_time - start_time
